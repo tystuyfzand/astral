@@ -28,3 +28,4 @@ See the "middleware" folder for examples.
 Examples
 --------
 
+A basic example showing the usage and middleware is available under `examples/basic`
