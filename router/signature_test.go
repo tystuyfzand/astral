@@ -35,11 +35,11 @@ func TestParseSignature(t *testing.T) {
 		t.Fatal("Expected intarg to be type int")
 	}
 
-	if floatArg, exists := r.Arguments["floatarg"]; exists && floatArg.Type != ArgumentTypeFloat {
+	if floatArg, exists := r.Arguments["floatarg"]; !exists || floatArg.Type != ArgumentTypeFloat {
 		t.Fatal("Expected floatarg to be type float")
 	}
 
-	if boolArg, exists := r.Arguments["boolarg"]; exists && boolArg.Type != ArgumentTypeBool {
+	if boolArg, exists := r.Arguments["boolarg"]; !exists || boolArg.Type != ArgumentTypeBool {
 		t.Fatal("Expected boolarg to be type bool")
 	}
 }
