@@ -5,6 +5,17 @@ A command router for [discordgo](https://github.com/bwmarrin/discordgo) with a f
 
 Heavily inspired by [dgrouter](https://github.com/Necroforger/dgrouter), but based off the command system used in [Astra](https://astrabot.net).
 
+Importing/Installing
+-
+
+```bash
+go get meow.tf/astral
+```
+
+```go
+import "meow.tf/astral/router"
+```
+
 Signatures
 ----------
 
