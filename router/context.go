@@ -4,6 +4,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+type FilterFunc func(string) string
+
 type Context struct {
 	route          *Route
 	Session        *discordgo.Session
@@ -17,6 +19,7 @@ type Context struct {
 	Arguments      []string
 	ArgumentCount  int
 	Vars           map[string]interface{}
+	Filters        []FilterFunc
 }
 
 // Create a new Context from the session and event
@@ -47,9 +50,16 @@ func ContextFrom(session *discordgo.Session, event *discordgo.MessageCreate, r *
 		Arguments:      args,
 		ArgumentCount:  len(args),
 		Vars:           make(map[string]interface{}),
+		Filters:        make([]FilterFunc, 0),
 	}
 
 	return ctx, nil
+}
+
+// Add a filter to the context
+func (c *Context) Use(f ...FilterFunc) *Context {
+	c.Filters = append(c.Filters, f...)
+	return c
 }
 
 // Set sets a variable on the context

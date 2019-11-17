@@ -9,7 +9,8 @@ import (
 )
 
 var (
-	ErrEmptyText = errors.New("text is empty")
+	ErrEmptyText         = errors.New("text is empty")
+	ErrFilterIntercepted = errors.New("intercepted by filter")
 )
 
 // Show context usage
@@ -27,6 +28,14 @@ func (c *Context) Usage(usage ...string) (*discordgo.Message, error) {
 func (c *Context) Send(text string) (*discordgo.Message, error) {
 	if text == "" {
 		return nil, ErrEmptyText
+	}
+
+	for _, filter := range c.Filters {
+		text = filter(text)
+
+		if text == "" {
+			return nil, ErrFilterIntercepted
+		}
 	}
 
 	return c.Session.ChannelMessageSend(c.Channel.ID, text)
