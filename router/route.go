@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	userMentionRegexp = regexp.MustCompile("<@!?(\\d+)>")
+	userMentionRegexp    = regexp.MustCompile("<@!?(\\d+)>")
 	channelMentionRegexp = regexp.MustCompile("<#(\\d+)>")
 )
 
@@ -26,10 +26,10 @@ type Route struct {
 
 // Argument type contains defined arguments, parsed from the command signature
 type Argument struct {
-	Index int
-	Name string
+	Index    int
+	Name     string
 	Required bool
-	Type int
+	Type     int
 }
 
 func New() *Route {
@@ -77,6 +77,10 @@ func (r *Route) Find(args ...string) *Route {
 			args = args[1:]
 			return subRoute.Find(args...)
 		}
+	}
+
+	if r.handler == nil {
+		return nil
 	}
 
 	return r

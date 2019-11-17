@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	flagToken = flag.String("token", "", "Discord bot token")
+	flagToken  = flag.String("token", "", "Discord bot token")
 	flagPrefix = flag.String("prefix", "!", "Command prefix")
 
 	route *router.Route
@@ -59,7 +59,7 @@ func main() {
 
 	signal.Notify(interrupt, os.Interrupt, os.Kill, syscall.SIGTERM)
 
-	<- interrupt
+	<-interrupt
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -78,24 +78,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	match := route.Find(args...)
 
 	if match == nil {
-		return
-	}
-
-	c, err := s.State.Channel(m.ChannelID)
-
-	if c == nil {
-		c, err = s.Channel(m.ChannelID)
-	}
-
-	if err != nil || c == nil {
-		return
-	}
-
-	// Find the guild for that channel. This uses State if enabled.
-	g, err := s.State.Guild(c.GuildID)
-
-	if err != nil {
-		// Could not find guild.
 		return
 	}
 
@@ -118,19 +100,13 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		args = []string{}
 	}
 
-	ctx := &router.Context{
-		Prefix: prefix,
-		Session: s,
-		Guild: g,
-		Channel: c,
-		User: m.Author,
-		Event: m,
-		Command: command,
-		ArgumentString: argString,
-		Arguments: args,
-		ArgumentCount: len(args),
-		Vars: make(map[string]interface{}),
+	ctx, err := router.ContextFrom(s, m, match, command, args, argString)
+
+	if err != nil {
+		return
 	}
+
+	ctx.Prefix = prefix
 
 	go match.Call(ctx)
 }
