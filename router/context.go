@@ -39,6 +39,8 @@ func ContextFrom(session *discordgo.Session, event *discordgo.MessageCreate, r *
 		route:          r,
 		Session:        session,
 		Event:          event,
+		Guild:          g,
+		Channel:        c,
 		User:           event.Author,
 		Command:        command,
 		ArgumentString: argString,
