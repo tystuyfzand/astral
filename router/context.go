@@ -4,22 +4,23 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"io"
+	"strconv"
 	"strings"
 )
 
 type Context struct {
-	route *Route
-	Session *discordgo.Session
-	Event *discordgo.MessageCreate
-	Guild *discordgo.Guild
-	Channel *discordgo.Channel
-	User *discordgo.User
-	Prefix string
-	Command string
+	route          *Route
+	Session        *discordgo.Session
+	Event          *discordgo.MessageCreate
+	Guild          *discordgo.Guild
+	Channel        *discordgo.Channel
+	User           *discordgo.User
+	Prefix         string
+	Command        string
 	ArgumentString string
-	Arguments []string
-	ArgumentCount int
-	Vars map[string]interface{}
+	Arguments      []string
+	ArgumentCount  int
+	Vars           map[string]interface{}
 }
 
 // Set sets a variable on the context
@@ -86,60 +87,128 @@ func (c *Context) ReplyFile(name string, r io.Reader) (*discordgo.Message, error
 	return c.Session.ChannelMessageSendComplex(c.Channel.ID, &discordgo.MessageSend{Content: "<@" + c.User.ID + ">", File: &discordgo.File{Name: name, Reader: r}})
 }
 
-// Find and return a named argument
-func (c *Context) Argument(name string) string {
+// Find the specified argument nand return the information and value
+func (c *Context) arg(name string) (*Argument, string) {
 	if arg, exists := c.route.Arguments[name]; exists {
-		if arg.Index > len(c.Arguments) - 1 {
-			return ""
+		if arg.Index > len(c.Arguments)-1 {
+			return arg, ""
 		}
 
-		return c.Arguments[arg.Index]
+		return arg, c.Arguments[arg.Index]
 	}
-	return ""
+
+	panic("undefined argument " + name)
 }
 
-// UserArgument parses and returns a *discordgo.User for the specified argument name
-func (c *Context) UserArgument(name string) *discordgo.User {
-	if arg, exists := c.route.Arguments[name]; exists {
-		if arg.Index > len(c.Arguments) - 1 {
-			return nil
-		}
+// Find and return a named argument
+func (c *Context) Arg(name string) string {
+	_, val := c.arg(name)
 
-		m := userMentionRegexp.FindStringSubmatch(c.Arguments[arg.Index])
+	return val
+}
 
-		if m == nil {
-			return nil
-		}
+// Find and return a named int argument
+func (c *Context) IntArg(name string) int64 {
+	arg, val := c.arg(name)
 
-		u, err := c.Session.User(m[1])
+	if arg.Type != ArgumentTypeInt {
+		panic("Trying to use a non-int argument as int")
+	}
+
+	v, err := strconv.ParseInt(val, 10, 64)
+
+	if err != nil {
+		return -1
+	}
+
+	return v
+}
+
+// Find and return a named float argument
+func (c *Context) FloatArg(name string) float64 {
+	arg, val := c.arg(name)
+
+	if arg.Type != ArgumentTypeFloat {
+		panic("Trying to use a non-float argument as float")
+	}
+
+	v, err := strconv.ParseFloat(val, 64)
+
+	if err != nil {
+		return -1
+	}
+
+	return v
+}
+
+// Find and return a named bool argument
+func (c *Context) BoolArg(name string) bool {
+	arg, val := c.arg(name)
+
+	if arg.Type != ArgumentTypeBool {
+		panic("Trying to use a non-bool argument as bool")
+	}
+
+	v, err := strconv.ParseBool(val)
+
+	if err != nil {
+		return false
+	}
+
+	return v
+}
+
+// Find and return a named User argument
+func (c *Context) UserArg(name string) *discordgo.User {
+	arg, val := c.arg(name)
+
+	if arg.Type != ArgumentTypeUserMention {
+		panic("Trying to use a non-user argument as user")
+	}
+
+	m := userMentionRegexp.FindStringSubmatch(val)
+
+	if m == nil {
+		return nil
+	}
+
+	u, err := c.Session.User(m[1])
+
+	if err != nil {
+		return nil
+	}
+
+	return u
+}
+
+// Find and return a named Channel argument
+func (c *Context) ChannelArgument(name string) *discordgo.Channel {
+	return c.ChannelArgumentType(name, -1)
+}
+
+// Find and return a named Channel argument with a specified type
+func (c *Context) ChannelArgumentType(name string, t discordgo.ChannelType) *discordgo.Channel {
+	arg, val := c.arg(name)
+
+	if arg.Type != ArgumentTypeChannelMention {
+		panic("Trying to use a non-channel argument as channel")
+	}
+
+	m := channelMentionRegexp.FindStringSubmatch(val)
+
+	if m != nil {
+		c, err := c.Session.Channel(m[1])
 
 		if err != nil {
 			return nil
 		}
 
-		return u
+		return c
 	}
-	return nil
-}
 
-// ChannelArgument returns the first found Channel from the argument name
-func (c *Context) ChannelArgument(name string) *discordgo.Channel {
-	return c.ChannelArgumentType(name, -1)
-}
-
-// ChannelArgumentType returns the first found Channel of the specified type
-func (c *Context) ChannelArgumentType(name string, t discordgo.ChannelType) *discordgo.Channel {
-	if arg, exists := c.route.Arguments[name]; exists {
-		if arg.Index > len(c.Arguments) - 1 {
-			return nil
-		}
-
-		channelName := c.Arguments[arg.Index]
-
-		m := channelMentionRegexp.FindStringSubmatch(channelName)
-
-		if m != nil {
-			c, err := c.Session.Channel(m[1])
+	for _, ch := range c.Guild.Channels {
+		if strings.ToLower(ch.Name) == strings.ToLower(val) && (t == -1 || ch.Type == t) {
+			c, err := c.Session.Channel(ch.ID)
 
 			if err != nil {
 				return nil
@@ -147,20 +216,7 @@ func (c *Context) ChannelArgumentType(name string, t discordgo.ChannelType) *dis
 
 			return c
 		}
-
-		for _, ch := range c.Guild.Channels {
-			if strings.ToLower(ch.Name) == strings.ToLower(channelName) && (t == -1 || ch.Type == t) {
-				c, err := c.Session.Channel(ch.ID)
-
-				if err != nil {
-					return nil
-				}
-
-				return c
-			}
-		}
-
-		return nil
 	}
+
 	return nil
 }
