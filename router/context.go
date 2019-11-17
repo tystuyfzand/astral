@@ -182,12 +182,12 @@ func (c *Context) UserArg(name string) *discordgo.User {
 }
 
 // Find and return a named Channel argument
-func (c *Context) ChannelArgument(name string) *discordgo.Channel {
-	return c.ChannelArgumentType(name, -1)
+func (c *Context) ChannelArg(name string) *discordgo.Channel {
+	return c.ChannelArgType(name, -1)
 }
 
 // Find and return a named Channel argument with a specified type
-func (c *Context) ChannelArgumentType(name string, t discordgo.ChannelType) *discordgo.Channel {
+func (c *Context) ChannelArgType(name string, t discordgo.ChannelType) *discordgo.Channel {
 	arg, val := c.arg(name)
 
 	if arg.Type != ArgumentTypeChannelMention {
