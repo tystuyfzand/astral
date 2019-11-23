@@ -108,5 +108,19 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	ctx.Prefix = prefix
 
+	ctx.Use(convertToEmbed)
+
 	go match.Call(ctx)
+}
+
+func convertToEmbed(fn router.SendFunc) router.SendFunc {
+	return func(ctx *router.Context, reply router.Reply) (*discordgo.Message, error) {
+		text, ok := reply.(*router.TextReply)
+
+		if !ok {
+			return fn(ctx, reply)
+		}
+
+		return ctx.SendReply(&router.EmbedReply{Embed: &discordgo.MessageEmbed{Description: text.Text}})
+	}
 }
