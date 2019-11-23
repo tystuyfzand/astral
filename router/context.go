@@ -19,7 +19,7 @@ type Context struct {
 	Arguments      []string
 	ArgumentCount  int
 	Vars           map[string]interface{}
-	Filters        []FilterFunc
+	middleware     []ContextMiddlewareFunc
 }
 
 // Create a new Context from the session and event
@@ -50,15 +50,15 @@ func ContextFrom(session *discordgo.Session, event *discordgo.MessageCreate, r *
 		Arguments:      args,
 		ArgumentCount:  len(args),
 		Vars:           make(map[string]interface{}),
-		Filters:        make([]FilterFunc, 0),
+		middleware:     make([]ContextMiddlewareFunc, 0),
 	}
 
 	return ctx, nil
 }
 
 // Add a filter to the context
-func (c *Context) Use(f ...FilterFunc) *Context {
-	c.Filters = append(c.Filters, f...)
+func (c *Context) Use(f ...ContextMiddlewareFunc) *Context {
+	c.middleware = append(c.middleware, f...)
 	return c
 }
 

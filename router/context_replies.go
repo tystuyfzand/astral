@@ -9,8 +9,7 @@ import (
 )
 
 var (
-	ErrEmptyText         = errors.New("text is empty")
-	ErrFilterIntercepted = errors.New("intercepted by filter")
+	ErrEmptyText = errors.New("text is empty")
 )
 
 // Show context usage
@@ -30,15 +29,7 @@ func (c *Context) Send(text string) (*discordgo.Message, error) {
 		return nil, ErrEmptyText
 	}
 
-	for _, filter := range c.Filters {
-		text = filter(text)
-
-		if text == "" {
-			return nil, ErrFilterIntercepted
-		}
-	}
-
-	return c.Session.ChannelMessageSend(c.Channel.ID, text)
+	return c.wrapMiddleware(&TextReply{Text: text})
 }
 
 // Send formattable text to the originating channel
@@ -63,15 +54,45 @@ func (c *Context) Replyf(format string, a ...interface{}) (*discordgo.Message, e
 
 // Reply to a specific user
 func (c *Context) ReplyTo(to, text string) (*discordgo.Message, error) {
-	return c.Session.ChannelMessageSend(c.Channel.ID, fmt.Sprintf("<@%s> %s", to, text))
+	return c.Send(fmt.Sprintf("<@%s> %s", to, text))
 }
 
 // Reply to a user with an embed object
 func (c *Context) ReplyEmbed(embed *discordgo.MessageEmbed) (*discordgo.Message, error) {
-	return c.Session.ChannelMessageSendComplex(c.Channel.ID, &discordgo.MessageSend{Content: "<@" + c.User.ID + ">", Embed: embed})
+	return c.wrapMiddleware(&EmbedReply{Embed: embed})
 }
 
 // Reply to a user with a file object
 func (c *Context) ReplyFile(name string, r io.Reader) (*discordgo.Message, error) {
-	return c.Session.ChannelMessageSendComplex(c.Channel.ID, &discordgo.MessageSend{Content: "<@" + c.User.ID + ">", File: &discordgo.File{Name: name, Reader: r}})
+	return c.wrapMiddleware(&FileReply{Name: name, Reader: r})
+}
+
+// Wrap a reply with middleware
+func (c *Context) wrapMiddleware(reply Reply) (*discordgo.Message, error) {
+	handler := func(ctx *Context, reply Reply) (*discordgo.Message, error) {
+		return ctx.SendReply(reply)
+	}
+
+	for _, m := range c.middleware {
+		handler = m(handler)
+	}
+
+	return handler(c, reply)
+}
+
+// Send a reply (Text, Embed, File, etc)
+func (c *Context) SendReply(reply Reply) (*discordgo.Message, error) {
+	send := &discordgo.MessageSend{}
+	switch v := reply.(type) {
+	case *TextReply:
+		send.Content = v.Text
+	case *EmbedReply:
+		send.Content = "<@" + c.User.ID + ">"
+		send.Embed = v.Embed
+	case *FileReply:
+		send.Content = "<@" + c.User.ID + ">"
+		send.File = &discordgo.File{Name: v.Name, Reader: v.Reader}
+	}
+
+	return c.Session.ChannelMessageSendComplex(c.Channel.ID, send)
 }
