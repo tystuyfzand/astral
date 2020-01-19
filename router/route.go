@@ -19,6 +19,7 @@ type Route struct {
 
 	Name                  string
 	Usage                 string
+	Description           string
 	Arguments             map[string]*Argument
 	ArgumentCount         int
 	RequiredArgumentCount int
@@ -41,6 +42,11 @@ func New() *Route {
 
 func (r *Route) Add(n *Route) *Route {
 	r.Routes[n.Name] = n
+	return r
+}
+
+func (r *Route) Desc(description string) *Route {
+	r.Description = description
 	return r
 }
 
