@@ -16,6 +16,7 @@ type Route struct {
 	handler    Handler
 	middleware []MiddlewareFunc
 	Routes     map[string]*Route
+	Aliases    map[string]string
 
 	Name                  string
 	Usage                 string
@@ -37,6 +38,7 @@ func New() *Route {
 	return &Route{
 		middleware: make([]MiddlewareFunc, 0),
 		Routes:     make(map[string]*Route),
+		Aliases:    make(map[string]string),
 	}
 }
 
@@ -47,6 +49,11 @@ func (r *Route) Add(n *Route) *Route {
 
 func (r *Route) Desc(description string) *Route {
 	r.Description = description
+	return r
+}
+
+func (r *Route) Alias(alias, name string) *Route {
+	r.Aliases[alias] = name
 	return r
 }
 
@@ -79,7 +86,13 @@ func (r *Route) Use(f ...MiddlewareFunc) *Route {
 
 func (r *Route) Find(args ...string) *Route {
 	if len(args) > 0 {
-		if subRoute, ok := r.Routes[args[0]]; ok {
+		routeName := args[0]
+
+		if alias, ok := r.Aliases[routeName]; ok {
+			routeName = alias
+		}
+
+		if subRoute, ok := r.Routes[routeName]; ok {
 			args = args[1:]
 			return subRoute.Find(args...)
 		}
