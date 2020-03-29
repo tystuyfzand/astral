@@ -94,7 +94,7 @@ func (r *Route) Find(args ...string) *Route {
 
 func (r *Route) Call(ctx *Context) {
 	if ctx.ArgumentCount > 0 {
-		if subRoute := r.Find(ctx.Arguments[1:]...); subRoute != nil {
+		if subRoute := r.Find(ctx.Arguments[1:]...); subRoute != nil && subRoute != r {
 			ctx.Prefix = ctx.Prefix + " " + ctx.Arguments[0]
 			ctx.Arguments = ctx.Arguments[1:]
 			ctx.ArgumentCount = len(ctx.Arguments)
