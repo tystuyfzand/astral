@@ -67,6 +67,7 @@ func (r *Route) On(signature string, f Handler) *Route {
 
 func (r *Route) Group(fn func(*Route)) *Route {
 	rt := New()
+	rt.Use(r.middleware...)
 	fn(rt)
 	for _, sub := range rt.Routes {
 		r.Add(sub)
