@@ -43,6 +43,7 @@ func main() {
 		ctx.Reply("I love ping pong!")
 	})
 
+	// Test for NSFW middleware
 	route.Group(func(r *router.Route) {
 		r.Use(middleware.RequireNSFW(middleware.CatchReply("You have to be in an nsfw channel for this!")))
 
@@ -51,6 +52,7 @@ func main() {
 		})
 	})
 
+	// Test for cooldown/rate limiting middleware
 	route.Group(func(r *router.Route) {
 		reply := middleware.CatchReply("You're doing that too often! SLOW DOWN!")
 
@@ -59,6 +61,13 @@ func main() {
 		r.On("test", func(ctx *router.Context) {
 			ctx.Reply("REPLY!")
 		})
+	})
+
+	// Test for aliasing
+	route.Group(func(r *router.Route) {
+		r.On("testalias", func(ctx *router.Context) {
+			ctx.Reply("Called " + ctx.Command)
+		}).Alias("alias")
 	})
 
 	err = dg.Open()
