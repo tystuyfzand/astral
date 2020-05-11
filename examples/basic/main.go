@@ -6,11 +6,13 @@ import (
 	"log"
 	"meow.tf/astral/arguments"
 	"meow.tf/astral/middleware"
+	"meow.tf/astral/middleware/cooldown"
 	"meow.tf/astral/router"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 )
 
 var (
@@ -46,6 +48,16 @@ func main() {
 
 		r.On("nsfw", func(ctx *router.Context) {
 			ctx.Reply("That's LEWD!")
+		})
+	})
+
+	route.Group(func(r *router.Route) {
+		reply := middleware.CatchReply("You're doing that too often! SLOW DOWN!")
+
+		r.Use(cooldown.NewWithCatch(2, time.Minute, cooldown.User, reply))
+
+		r.On("test", func(ctx *router.Context) {
+			ctx.Reply("REPLY!")
 		})
 	})
 
