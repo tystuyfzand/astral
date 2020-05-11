@@ -13,10 +13,11 @@ type Handler func(*Context)
 
 // Route type contains information about a route, such as middleware, routes, etc
 type Route struct {
+	parent     *Route
 	handler    Handler
 	middleware []MiddlewareFunc
 	Routes     map[string]*Route
-	Aliases    map[string]string
+	aliases    map[string]string
 
 	Name                  string
 	Usage                 string
@@ -38,7 +39,7 @@ func New() *Route {
 	return &Route{
 		middleware: make([]MiddlewareFunc, 0),
 		Routes:     make(map[string]*Route),
-		Aliases:    make(map[string]string),
+		aliases:    make(map[string]string),
 	}
 }
 
@@ -52,13 +53,16 @@ func (r *Route) Desc(description string) *Route {
 	return r
 }
 
-func (r *Route) Alias(alias, name string) *Route {
-	r.Aliases[alias] = name
+func (r *Route) Alias(alias string) *Route {
+	if r.parent != nil {
+		r.parent.aliases[alias] = r.Name
+	}
 	return r
 }
 
 func (r *Route) On(signature string, f Handler) *Route {
 	rt := New()
+	rt.parent = r
 	rt.handler = f
 	parseSignature(rt, signature)
 	r.Routes[rt.Name] = rt.Use(r.middleware...)
@@ -69,9 +73,15 @@ func (r *Route) Group(fn func(*Route)) *Route {
 	rt := New()
 	rt.Use(r.middleware...)
 	fn(rt)
+
 	for _, sub := range rt.Routes {
 		r.Add(sub)
 	}
+
+	for alias, name := range rt.aliases {
+		r.aliases[alias] = name
+	}
+
 	return r
 }
 
@@ -89,7 +99,7 @@ func (r *Route) Find(args ...string) *Route {
 	if len(args) > 0 {
 		routeName := args[0]
 
-		if alias, ok := r.Aliases[routeName]; ok {
+		if alias, ok := r.aliases[routeName]; ok {
 			routeName = alias
 		}
 
@@ -106,14 +116,13 @@ func (r *Route) Find(args ...string) *Route {
 	return r
 }
 
-func (r *Route) Call(ctx *Context) {
+func (r *Route) Call(ctx *Context) error {
 	if ctx.ArgumentCount > 0 {
 		if subRoute := r.Find(ctx.Arguments[1:]...); subRoute != nil && subRoute != r {
 			ctx.Prefix = ctx.Prefix + " " + ctx.Arguments[0]
 			ctx.Arguments = ctx.Arguments[1:]
 			ctx.ArgumentCount = len(ctx.Arguments)
-			subRoute.Call(ctx)
-			return
+			return subRoute.Call(ctx)
 		}
 	}
 
@@ -123,11 +132,11 @@ func (r *Route) Call(ctx *Context) {
 		// Arguments are cached, construct usage
 		if err := r.Validate(ctx); err != nil {
 			if err == UsageError {
-				ctx.Reply("Usage: " + ctx.Prefix + r.Usage)
+				_, err = ctx.Reply("Usage: " + ctx.Prefix + r.Usage)
 			} else {
-				ctx.Reply(err.Error())
+				_, err = ctx.Reply(err.Error())
 			}
-			return
+			return err
 		}
 	}
 
@@ -138,4 +147,6 @@ func (r *Route) Call(ctx *Context) {
 	}
 
 	handler(ctx)
+
+	return nil
 }
