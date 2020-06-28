@@ -2,6 +2,7 @@ package router
 
 import (
 	"regexp"
+	"strings"
 )
 
 var (
@@ -10,6 +11,12 @@ var (
 )
 
 type Handler func(*Context)
+
+// Options for FindComplex. Default is just Args in Find.
+type FindOpts struct {
+	Args      []string
+	MatchCase bool
+}
 
 // Route type contains information about a route, such as middleware, routes, etc
 type Route struct {
@@ -35,6 +42,7 @@ type Argument struct {
 	Type     int
 }
 
+// Create a new, empty route.
 func New() *Route {
 	return &Route{
 		middleware: make([]MiddlewareFunc, 0),
@@ -43,16 +51,19 @@ func New() *Route {
 	}
 }
 
+// Add a sub route to this route.
 func (r *Route) Add(n *Route) *Route {
 	r.Routes[n.Name] = n
 	return r
 }
 
+// Set this route's description
 func (r *Route) Desc(description string) *Route {
 	r.Description = description
 	return r
 }
 
+// Add an alias to the parent route for the current route.
 func (r *Route) Alias(alias string) *Route {
 	if r.parent != nil {
 		r.parent.aliases[alias] = r.Name
@@ -60,6 +71,13 @@ func (r *Route) Alias(alias string) *Route {
 	return r
 }
 
+// Adds a handler for a specific command.
+// Signature can be a simple command, or a string like the following:
+//  	command <arg1> <arg2> [arg3] [#channel] [@user]
+// The library will automatically parse and validate the required arguments.
+// <> means an argument will be required, [] says it's optional
+// As well as required and optional types, you can use # and @ to signify
+// That routes must match a valid user or channel.
 func (r *Route) On(signature string, f Handler) *Route {
 	rt := New()
 	rt.parent = r
@@ -69,6 +87,8 @@ func (r *Route) On(signature string, f Handler) *Route {
 	return rt
 }
 
+// Create a temporary route to use for registering sub routes.
+// All routes will be copied into this route, with middleware applied.
 func (r *Route) Group(fn func(*Route)) *Route {
 	rt := New()
 	rt.Use(r.middleware...)
@@ -85,6 +105,7 @@ func (r *Route) Group(fn func(*Route)) *Route {
 	return r
 }
 
+// Apply middleware to this route. All sub-routes will also inherit this middleware.
 func (r *Route) Use(f ...MiddlewareFunc) *Route {
 	if r.middleware == nil {
 		r.middleware = f
@@ -95,17 +116,27 @@ func (r *Route) Use(f ...MiddlewareFunc) *Route {
 	return r
 }
 
+// Find a route by arguments
 func (r *Route) Find(args ...string) *Route {
-	if len(args) > 0 {
-		routeName := args[0]
+	return r.FindComplex(FindOpts{Args: args})
+}
+
+// Find route by options, including args, case sensitive matching, etc
+func (r *Route) FindComplex(opts FindOpts) *Route {
+	if len(opts.Args) > 0 {
+		routeName := opts.Args[0]
+
+		if !opts.MatchCase {
+			routeName = strings.ToLower(routeName)
+		}
 
 		if alias, ok := r.aliases[routeName]; ok {
 			routeName = alias
 		}
 
 		if subRoute, ok := r.Routes[routeName]; ok {
-			args = args[1:]
-			return subRoute.Find(args...)
+			opts.Args = opts.Args[1:]
+			return subRoute.FindComplex(opts)
 		}
 	}
 
@@ -116,6 +147,9 @@ func (r *Route) Find(args ...string) *Route {
 	return r
 }
 
+// Execute a route.
+// Handlers are called synchronously.
+// Sub-routes will be walked until the stack is empty or a match couldn't be found.
 func (r *Route) Call(ctx *Context) error {
 	if ctx.ArgumentCount > 0 {
 		if subRoute := r.Find(ctx.Arguments[1:]...); subRoute != nil && subRoute != r {
