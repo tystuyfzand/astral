@@ -1,9 +1,8 @@
 package router
 
 import (
-	"github.com/bwmarrin/discordgo"
+	"github.com/diamondburned/arikawa/v2/discord"
 	"strconv"
-	"strings"
 )
 
 // Find the specified argument nand return the information and value
@@ -78,7 +77,7 @@ func (c *Context) BoolArg(name string) bool {
 }
 
 // Find and return a named User argument
-func (c *Context) UserArg(name string) *discordgo.User {
+func (c *Context) UserArg(name string) *discord.User {
 	arg, val := c.arg(name)
 
 	if arg.Type != ArgumentTypeUserMention {
@@ -91,7 +90,13 @@ func (c *Context) UserArg(name string) *discordgo.User {
 		return nil
 	}
 
-	u, err := c.Session.User(m[1])
+	sf, err := discord.ParseSnowflake(m[1])
+
+	if err != nil {
+		return nil
+	}
+
+	u, err := c.Session.User(discord.UserID(sf))
 
 	if err != nil {
 		return nil
@@ -101,12 +106,12 @@ func (c *Context) UserArg(name string) *discordgo.User {
 }
 
 // Find and return a named Channel argument
-func (c *Context) ChannelArg(name string) *discordgo.Channel {
+func (c *Context) ChannelArg(name string) *discord.Channel {
 	return c.ChannelArgType(name, -1)
 }
 
 // Find and return a named Channel argument with a specified type
-func (c *Context) ChannelArgType(name string, t discordgo.ChannelType) *discordgo.Channel {
+func (c *Context) ChannelArgType(name string, t discord.ChannelType) *discord.Channel {
 	arg, val := c.arg(name)
 
 	if arg.Type != ArgumentTypeChannelMention {
@@ -116,25 +121,19 @@ func (c *Context) ChannelArgType(name string, t discordgo.ChannelType) *discordg
 	m := channelMentionRegexp.FindStringSubmatch(val)
 
 	if m != nil {
-		c, err := c.Session.Channel(m[1])
+		sf, err := discord.ParseSnowflake(m[1])
+
+		if err != nil {
+			return nil
+		}
+
+		c, err := c.Session.Channel(discord.ChannelID(sf))
 
 		if err != nil {
 			return nil
 		}
 
 		return c
-	}
-
-	for _, ch := range c.Guild.Channels {
-		if strings.ToLower(ch.Name) == strings.ToLower(val) && (t == -1 || ch.Type == t) {
-			c, err := c.Session.Channel(ch.ID)
-
-			if err != nil {
-				return nil
-			}
-
-			return c
-		}
 	}
 
 	return nil

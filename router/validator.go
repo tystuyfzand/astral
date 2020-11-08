@@ -2,12 +2,13 @@ package router
 
 import (
 	"errors"
+	"github.com/diamondburned/arikawa/v2/discord"
 	"regexp"
 	"strconv"
 )
 
 var (
-	UsageError = errors.New("usage")
+	UsageError  = errors.New("usage")
 	emojiRegexp = regexp.MustCompile("<(a?):(.+?):(\\d+)>")
 )
 
@@ -22,7 +23,7 @@ func (r *Route) Validate(ctx *Context) error {
 	var err error
 
 	for _, arg := range r.Arguments {
-		if ctx.ArgumentCount < arg.Index + 1 {
+		if ctx.ArgumentCount < arg.Index+1 {
 			break
 		}
 
@@ -109,11 +110,13 @@ func validateUserMention(ctx *Context, arg *Argument, argValue string) error {
 		return errors.New(arg.Name + " must be a user.")
 	}
 
-	member, err := ctx.Session.State.Member(ctx.Guild.ID, m[1])
+	sf, err := discord.ParseSnowflake(m[1])
 
 	if err != nil {
-		member, err = ctx.Session.GuildMember(ctx.Guild.ID, m[1])
+		return err
 	}
+
+	member, err := ctx.Session.Member(ctx.Guild.ID, discord.UserID(sf))
 
 	if member != nil && err == nil {
 		return nil
@@ -131,11 +134,13 @@ func validateChannelMention(ctx *Context, arg *Argument, argValue string) error 
 		return errors.New(arg.Name + " must be a channel.")
 	}
 
-	c, err := ctx.Session.State.Channel(m[1])
+	sf, err := discord.ParseSnowflake(m[1])
 
 	if err != nil {
-		c, err = ctx.Session.Channel(m[1])
+		return err
 	}
+
+	c, err := ctx.Session.Channel(discord.ChannelID(sf))
 
 	if c != nil && c.GuildID == ctx.Guild.ID {
 		return nil

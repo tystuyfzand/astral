@@ -2,7 +2,8 @@ package main
 
 import (
 	"flag"
-	"github.com/bwmarrin/discordgo"
+	"github.com/diamondburned/arikawa/v2/gateway"
+	"github.com/diamondburned/arikawa/v2/session"
 	"log"
 	"meow.tf/astral/arguments"
 	"meow.tf/astral/middleware"
@@ -25,13 +26,13 @@ var (
 func main() {
 	flag.Parse()
 
-	dg, err := discordgo.New("Bot " + *flagToken)
+	s, err := session.New("Bot " + *flagToken)
 
 	if err != nil {
 		log.Fatalln("Unable to create discordgo instance:", err)
 	}
 
-	dg.AddHandler(messageCreate)
+	s.AddHandler(messageCreateHandler(s))
 
 	route = router.New()
 
@@ -70,7 +71,7 @@ func main() {
 		}).Alias("alias")
 	})
 
-	err = dg.Open()
+	err = s.Open()
 
 	if err != nil {
 		log.Fatalln("Unable to connect to Discord:", err)
@@ -83,51 +84,53 @@ func main() {
 	<-interrupt
 }
 
-func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	str := m.Content
+func messageCreateHandler(s *session.Session) func(evt *gateway.MessageCreateEvent) {
+	return func(evt *gateway.MessageCreateEvent) {
+		str := evt.Content
 
-	prefix := *flagPrefix
+		prefix := *flagPrefix
 
-	if !strings.HasPrefix(str, prefix) {
-		return
+		if !strings.HasPrefix(str, prefix) {
+			return
+		}
+
+		str = strings.TrimPrefix(str, prefix)
+
+		args := arguments.Parse(str)
+
+		match := route.Find(args...)
+
+		if match == nil {
+			return
+		}
+
+		idx := strings.Index(str, " ")
+
+		var argString string
+
+		if idx == -1 {
+			argString = ""
+		} else {
+			argString = strings.TrimSpace(str[idx+1:])
+		}
+
+		var command string
+
+		if len(args) > 1 {
+			command, args = args[0], args[1:]
+		} else {
+			command = str
+			args = []string{}
+		}
+
+		ctx, err := router.ContextFrom(s, evt, match, command, args, argString)
+
+		if err != nil {
+			return
+		}
+
+		ctx.Prefix = prefix
+
+		go match.Call(ctx)
 	}
-
-	str = strings.TrimPrefix(str, prefix)
-
-	args := arguments.Parse(str)
-
-	match := route.Find(args...)
-
-	if match == nil {
-		return
-	}
-
-	idx := strings.Index(str, " ")
-
-	var argString string
-
-	if idx == -1 {
-		argString = ""
-	} else {
-		argString = strings.TrimSpace(str[idx+1:])
-	}
-
-	var command string
-
-	if len(args) > 1 {
-		command, args = args[0], args[1:]
-	} else {
-		command = str
-		args = []string{}
-	}
-
-	ctx, err := router.ContextFrom(s, m, match, command, args, argString)
-
-	if err != nil {
-		return
-	}
-
-	ctx.Prefix = prefix
-
-	go match.Call(ctx)
 }

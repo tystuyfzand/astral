@@ -1,16 +1,18 @@
 package router
 
 import (
-	"github.com/bwmarrin/discordgo"
+	"github.com/diamondburned/arikawa/v2/discord"
+	"github.com/diamondburned/arikawa/v2/gateway"
+	"github.com/diamondburned/arikawa/v2/session"
 )
 
 type Context struct {
 	route          *Route
-	Session        *discordgo.Session
-	Event          *discordgo.MessageCreate
-	Guild          *discordgo.Guild
-	Channel        *discordgo.Channel
-	User           *discordgo.User
+	Session        *session.Session
+	Event          *gateway.MessageCreateEvent
+	Guild          *discord.Guild
+	Channel        *discord.Channel
+	User           discord.User
 	Prefix         string
 	Command        string
 	ArgumentString string
@@ -20,9 +22,9 @@ type Context struct {
 }
 
 // Create a new Context from the session and event
-func ContextFrom(session *discordgo.Session, event *discordgo.MessageCreate, r *Route, command string, args []string, argString string) (*Context, error) {
+func ContextFrom(session *session.Session, event *gateway.MessageCreateEvent, r *Route, command string, args []string, argString string) (*Context, error) {
 	// Find the channel for the event, which doesn't have a built-in discordgo equivalent of .Guild()
-	c, err := channel(session, event.ChannelID)
+	c, err := session.Channel(event.ChannelID)
 
 	if err != nil {
 		return nil, err
@@ -63,18 +65,4 @@ func (c *Context) Get(key string) interface{} {
 		return c
 	}
 	return nil
-}
-
-// Retrieve a channel from state or rest api
-func channel(session *discordgo.Session, channelID string) (c *discordgo.Channel, err error) {
-	if session.StateEnabled {
-		c, err = session.State.Channel(channelID)
-
-		if err == nil && c != nil {
-			return
-		}
-	}
-
-	c, err = session.Channel(channelID)
-	return
 }

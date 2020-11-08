@@ -111,15 +111,15 @@ func limiterKey(ctx *router.Context, flags int) string {
 	}
 
 	if flags&User != 0 {
-		k = append(k, "user", ctx.User.ID)
+		k = append(k, "user", ctx.User.ID.String())
 	}
 
 	if flags&Channel != 0 {
-		k = append(k, "channel", ctx.Channel.ID)
+		k = append(k, "channel", ctx.Channel.ID.String())
 	}
 
 	if flags&Server != 0 {
-		k = append(k, "guild", ctx.Guild.ID)
+		k = append(k, "guild", ctx.Guild.ID.String())
 	}
 
 	if flags&Global != 0 {
