@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/diamondburned/arikawa/v2/gateway"
-	"github.com/diamondburned/arikawa/v2/session"
+	"github.com/diamondburned/arikawa/v2/state"
 	"log"
 	"meow.tf/astral/arguments"
 	"meow.tf/astral/middleware"
@@ -26,7 +26,7 @@ var (
 func main() {
 	flag.Parse()
 
-	s, err := session.New("Bot " + *flagToken)
+	s, err := state.New("Bot " + *flagToken)
 
 	if err != nil {
 		log.Fatalln("Unable to create discordgo instance:", err)
@@ -84,7 +84,7 @@ func main() {
 	<-interrupt
 }
 
-func messageCreateHandler(s *session.Session) func(evt *gateway.MessageCreateEvent) {
+func messageCreateHandler(s *state.State) func(evt *gateway.MessageCreateEvent) {
 	return func(evt *gateway.MessageCreateEvent) {
 		str := evt.Content
 
