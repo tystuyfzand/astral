@@ -60,8 +60,8 @@ func (c *Context) Replyf(format string, a ...interface{}) (*discord.Message, err
 }
 
 // Reply to a specific user
-func (c *Context) ReplyTo(to, text string) (*discord.Message, error) {
-	return c.Send(fmt.Sprintf("<@%s> %s", to, text))
+func (c *Context) ReplyTo(to discord.UserID, text string) (*discord.Message, error) {
+	return c.Send(fmt.Sprintf("%s %s", to.Mention(), text))
 }
 
 // Reply to a user with an embed object
