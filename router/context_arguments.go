@@ -107,7 +107,7 @@ func (c *Context) UserArg(name string) *discord.User {
 
 // Find and return a named Channel argument
 func (c *Context) ChannelArg(name string) *discord.Channel {
-	return c.ChannelArgType(name, -1)
+	return c.ChannelArgType(name, 255)
 }
 
 // Find and return a named Channel argument with a specified type
@@ -130,6 +130,10 @@ func (c *Context) ChannelArgType(name string, t discord.ChannelType) *discord.Ch
 		c, err := c.Session.Channel(discord.ChannelID(sf))
 
 		if err != nil {
+			return nil
+		}
+
+		if t != 255 && c.Type != t {
 			return nil
 		}
 
