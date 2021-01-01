@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/diamondburned/arikawa/v2/api"
 	"github.com/diamondburned/arikawa/v2/discord"
+	"github.com/diamondburned/arikawa/v2/utils/sendpart"
 	"io"
 	"strings"
 )
@@ -41,7 +42,7 @@ func (c *Context) Sendf(format string, a ...interface{}) (*discord.Message, erro
 // Send a file by name and read from r
 func (c *Context) SendFile(name string, r io.Reader) (*discord.Message, error) {
 	data := api.SendMessageData{
-		Files: []api.SendMessageFile{
+		Files: []sendpart.File{
 			{Name: name, Reader: r},
 		},
 	}
@@ -73,7 +74,7 @@ func (c *Context) ReplyEmbed(embed *discord.Embed) (*discord.Message, error) {
 func (c *Context) ReplyFile(name string, r io.Reader) (*discord.Message, error) {
 	data := api.SendMessageData{
 		Content: "<@" + c.User.ID.String() + ">",
-		Files: []api.SendMessageFile{
+		Files: []sendpart.File{
 			{Name: name, Reader: r},
 		},
 	}
