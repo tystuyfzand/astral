@@ -77,6 +77,16 @@ func (c *Context) ReplyTo(to discord.UserID, text string) (*discord.Message, err
 
 // Reply to a user with an embed object
 func (c *Context) ReplyEmbed(embed *discord.Embed) (*discord.Message, error) {
+	if c.Channel.Type == discord.DirectMessage {
+		var err error
+
+		c.Channel, err = c.Session.CreatePrivateChannel(c.User.ID)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return c.Session.SendMessage(c.Channel.ID, "<@"+c.User.ID.String()+">", embed)
 }
 
@@ -87,6 +97,16 @@ func (c *Context) ReplyFile(name string, r io.Reader) (*discord.Message, error) 
 		Files: []sendpart.File{
 			{Name: name, Reader: r},
 		},
+	}
+
+	if c.Channel.Type == discord.DirectMessage {
+		var err error
+
+		c.Channel, err = c.Session.CreatePrivateChannel(c.User.ID)
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return c.Session.SendMessageComplex(c.Channel.ID, data)
