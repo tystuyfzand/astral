@@ -31,6 +31,16 @@ func (c *Context) Send(text string) (*discord.Message, error) {
 		return nil, ErrEmptyText
 	}
 
+	if c.Channel.Type == discord.DirectMessage {
+		var err error
+
+		c.Channel, err = c.Session.CreatePrivateChannel(c.User.ID)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return c.Session.SendMessage(c.Channel.ID, text, nil)
 }
 

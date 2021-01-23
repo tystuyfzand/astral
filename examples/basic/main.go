@@ -26,10 +26,15 @@ var (
 func main() {
 	flag.Parse()
 
-	s, err := state.New("Bot " + *flagToken)
+	intents := []gateway.Intents{
+		gateway.IntentGuilds,
+		gateway.IntentGuildMessages,
+	}
+
+	s, err := state.NewWithIntents("Bot "+*flagToken, intents...)
 
 	if err != nil {
-		log.Fatalln("Unable to create discordgo instance:", err)
+		log.Fatalln("Unable to create arikawa instance:", err)
 	}
 
 	s.AddHandler(messageCreateHandler(s))
@@ -42,6 +47,13 @@ func main() {
 
 	ping.On("pong", func(ctx *router.Context) {
 		ctx.Reply("I love ping pong!")
+	})
+
+	// Test for registering commands with arguments
+	route.Group(func(r *router.Route) {
+		r.On("testing <type> <channel> [#discord channel] [message]", func(ctx *router.Context) {
+			ctx.Replyf("Arg1: %s, Arg2: %s", ctx.Arg("type"), ctx.Arg("channel"))
+		})
 	})
 
 	// Test for NSFW middleware
@@ -77,6 +89,8 @@ func main() {
 		log.Fatalln("Unable to connect to Discord:", err)
 	}
 
+	log.Println("Ready.")
+
 	interrupt := make(chan os.Signal, 1)
 
 	signal.Notify(interrupt, os.Interrupt, os.Kill, syscall.SIGTERM)
@@ -101,6 +115,7 @@ func messageCreateHandler(s *state.State) func(evt *gateway.MessageCreateEvent) 
 		match := route.Find(args...)
 
 		if match == nil {
+			log.Println("No match for command args", args)
 			return
 		}
 
@@ -126,6 +141,7 @@ func messageCreateHandler(s *state.State) func(evt *gateway.MessageCreateEvent) 
 		ctx, err := router.ContextFrom(s, evt, match, command, args, argString)
 
 		if err != nil {
+			log.Println("Unable to create context:", err)
 			return
 		}
 

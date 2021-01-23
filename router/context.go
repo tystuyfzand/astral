@@ -30,11 +30,15 @@ func ContextFrom(state *state.State, event *gateway.MessageCreateEvent, r *Route
 		return nil, err
 	}
 
-	// Find the guild for that channel. This uses State if enabled.
-	g, err := state.Guild(c.GuildID)
+	var g *discord.Guild
 
-	if err != nil {
-		return nil, err
+	if c.Type != discord.DirectMessage {
+		// Find the guild for that channel. This uses State if enabled.
+		g, err = state.Guild(c.GuildID)
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	ctx := &Context{
