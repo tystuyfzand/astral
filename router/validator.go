@@ -3,6 +3,7 @@ package router
 import (
 	"errors"
 	"github.com/diamondburned/arikawa/v2/discord"
+	emoji "github.com/tmdvs/Go-Emoji-Utils"
 	"regexp"
 	"strconv"
 )
@@ -95,11 +96,17 @@ func validateBool(ctx *Context, arg *Argument, argValue string) error {
 
 // validateEmoji checks an integer argument to ensure it's a valid bool
 func validateEmoji(ctx *Context, arg *Argument, argValue string) error {
-	if !emojiRegexp.MatchString(argValue) {
-		return errors.New(arg.Name + " must be a valid emoji.")
+	if emojiRegexp.MatchString(argValue) {
+		return nil
 	}
 
-	return nil
+	_, err := emoji.LookupEmoji(argValue)
+
+	if err == nil {
+		return nil
+	}
+
+	return errors.New(arg.Name + " must be a valid emoji.")
 }
 
 // validateUserMention checks a user mention argument to ensure the user exists

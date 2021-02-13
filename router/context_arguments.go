@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/diamondburned/arikawa/v2/discord"
+	emoji "github.com/tmdvs/Go-Emoji-Utils"
 	"strconv"
 )
 
@@ -138,6 +139,41 @@ func (c *Context) ChannelArgType(name string, t discord.ChannelType) *discord.Ch
 		}
 
 		return c
+	}
+
+	return nil
+}
+
+// Get an argument as a Discord emoji.
+func (c *Context) EmojiArg(name string) *discord.Emoji {
+	arg, val := c.arg(name)
+
+	if arg.Type != ArgumentTypeEmoji {
+		panic("Trying to use a non-emoji argument as emoji")
+	}
+
+	m := emojiRegexp.FindStringSubmatch(val)
+
+	if m != nil {
+		sf, err := discord.ParseSnowflake(m[2])
+
+		if err != nil {
+			return nil
+		}
+
+		return &discord.Emoji{
+			ID:       discord.EmojiID(sf),
+			Name:     m[1],
+			Animated: m[0] == "a",
+		}
+	}
+
+	result, err := emoji.LookupEmoji(val)
+
+	if err == nil {
+		return &discord.Emoji{
+			Name: result.Value,
+		}
 	}
 
 	return nil
