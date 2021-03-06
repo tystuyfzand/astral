@@ -155,7 +155,7 @@ func (c *Context) EmojiArg(name string) *discord.Emoji {
 	m := emojiRegexp.FindStringSubmatch(val)
 
 	if m != nil {
-		sf, err := discord.ParseSnowflake(m[2])
+		sf, err := discord.ParseSnowflake(m[3])
 
 		if err != nil {
 			return nil
@@ -163,8 +163,8 @@ func (c *Context) EmojiArg(name string) *discord.Emoji {
 
 		return &discord.Emoji{
 			ID:       discord.EmojiID(sf),
-			Name:     m[1],
-			Animated: m[0] == "a",
+			Name:     m[2],
+			Animated: m[1] == "a",
 		}
 	}
 
