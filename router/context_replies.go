@@ -14,7 +14,7 @@ var (
 	ErrEmptyText = errors.New("text is empty")
 )
 
-// Show context usage
+// Usage builds and shows command usage
 func (c *Context) Usage(usage ...string) (*discord.Message, error) {
 	if len(usage) == 0 {
 		usage = []string{c.route.Usage}
@@ -44,12 +44,12 @@ func (c *Context) Send(text string) (*discord.Message, error) {
 	return c.Session.SendMessage(c.Channel.ID, text, nil)
 }
 
-// Send formattable text to the originating channel
+// Sendf Sends formattable text to the originating channel
 func (c *Context) Sendf(format string, a ...interface{}) (*discord.Message, error) {
 	return c.Send(fmt.Sprintf(format, a...))
 }
 
-// Send a file by name and read from r
+// SendFile sends a file by name and the data from r
 func (c *Context) SendFile(name string, r io.Reader) (*discord.Message, error) {
 	data := api.SendMessageData{
 		Files: []sendpart.File{
@@ -62,15 +62,29 @@ func (c *Context) SendFile(name string, r io.Reader) (*discord.Message, error) {
 
 // Reply with a user mention
 func (c *Context) Reply(text string) (*discord.Message, error) {
-	return c.Send(fmt.Sprintf("<@%s> %s", c.User.ID, text))
+	if text == "" {
+		return nil, ErrEmptyText
+	}
+
+	if c.Channel.Type == discord.DirectMessage {
+		var err error
+
+		c.Channel, err = c.Session.CreatePrivateChannel(c.User.ID)
+
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return c.Session.SendTextReply(c.Channel.ID, text, c.Message.ID)
 }
 
-// Reply with formatted text
+// Replyf Builds a message and replies with formatted text
 func (c *Context) Replyf(format string, a ...interface{}) (*discord.Message, error) {
 	return c.Reply(fmt.Sprintf(format, a...))
 }
 
-// Reply to a specific user
+// ReplyTo replies to a specific user
 func (c *Context) ReplyTo(to discord.UserID, text string) (*discord.Message, error) {
 	return c.Send(fmt.Sprintf("%s %s", to.Mention(), text))
 }
@@ -87,7 +101,7 @@ func (c *Context) ReplyEmbed(embed *discord.Embed) (*discord.Message, error) {
 		}
 	}
 
-	return c.Session.SendMessage(c.Channel.ID, "<@"+c.User.ID.String()+">", embed)
+	return c.Session.SendEmbedReply(c.Channel.ID, *embed, c.Message.ID)
 }
 
 // Reply to a user with a file object
@@ -97,6 +111,7 @@ func (c *Context) ReplyFile(name string, r io.Reader) (*discord.Message, error) 
 		Files: []sendpart.File{
 			{Name: name, Reader: r},
 		},
+		Reference: &discord.MessageReference{MessageID: c.Message.ID},
 	}
 
 	if c.Channel.Type == discord.DirectMessage {

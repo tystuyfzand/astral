@@ -4,6 +4,8 @@ github.com/diamondburned/arikawa/v2 v2.0.0-20210101074829-c6d8c741e883 h1:LKBqjb
 github.com/diamondburned/arikawa/v2 v2.0.0-20210101074829-c6d8c741e883/go.mod h1:e+lhS20ni2luFEU06Pc8paCxgZL99/RZb77dOC82CF0=
 github.com/diamondburned/arikawa/v2 v2.0.0 h1:DGdDDFgDsHFpr3Z2pZWuJ5yLGTr66jdIX+ohbjEmzt8=
 github.com/diamondburned/arikawa/v2 v2.0.0/go.mod h1:e+lhS20ni2luFEU06Pc8paCxgZL99/RZb77dOC82CF0=
+github.com/diamondburned/arikawa/v2 v2.0.6 h1:KQKyIyzSBtk/Ei7qyDOWiDqhi7vTlXCN293YWIyDbDk=
+github.com/diamondburned/arikawa/v2 v2.0.6/go.mod h1:e+lhS20ni2luFEU06Pc8paCxgZL99/RZb77dOC82CF0=
 github.com/diamondburned/timedmap v0.0.0-20200510234918-a50f7ffba1d8 h1:3Gg+m1ZbSzoYxJXB4G87jOfbn2GKsP7LX5kmEWDfPPc=
 github.com/diamondburned/timedmap v0.0.0-20200510234918-a50f7ffba1d8/go.mod h1:IhCTtFAXmwUTqlIGhDAvsvG9liud0NocNnIyOdfU2qA=
 github.com/gorilla/schema v1.1.0 h1:CamqUDOFUBqzrvxuz2vEwo8+SUdwsluFh7IlzJh30LY=

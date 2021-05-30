@@ -12,6 +12,7 @@ type Context struct {
 	Event          *gateway.MessageCreateEvent
 	Guild          *discord.Guild
 	Channel        *discord.Channel
+	Message        discord.Message
 	User           discord.User
 	Prefix         string
 	Command        string
@@ -47,6 +48,7 @@ func ContextFrom(state *state.State, event *gateway.MessageCreateEvent, r *Route
 		Event:          event,
 		Guild:          g,
 		Channel:        c,
+		Message:        event.Message,
 		User:           event.Author,
 		Command:        command,
 		ArgumentString: argString,
