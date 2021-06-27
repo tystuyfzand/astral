@@ -1,9 +1,9 @@
 package router
 
 import (
-	"github.com/diamondburned/arikawa/v2/discord"
-	"github.com/diamondburned/arikawa/v2/gateway"
-	"github.com/diamondburned/arikawa/v2/state"
+	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/arikawa/v3/gateway"
+	"github.com/diamondburned/arikawa/v3/state"
 )
 
 type Context struct {
@@ -22,7 +22,7 @@ type Context struct {
 	Vars           map[string]interface{}
 }
 
-// Create a new Context from the session and event
+// ContextFrom creates a new Context from the session and event
 func ContextFrom(state *state.State, event *gateway.MessageCreateEvent, r *Route, command string, args []string, argString string) (*Context, error) {
 	// Find the channel for the event, which doesn't have a built-in discordgo equivalent of .Guild()
 	c, err := state.Channel(event.ChannelID)

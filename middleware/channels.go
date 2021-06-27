@@ -2,7 +2,7 @@ package middleware
 
 import (
 	"errors"
-	"github.com/diamondburned/arikawa/v2/discord"
+	"github.com/diamondburned/arikawa/v3/discord"
 	"meow.tf/astral/router"
 )
 

@@ -1,7 +1,7 @@
 package router
 
 import (
-	"github.com/diamondburned/arikawa/v2/discord"
+	"github.com/diamondburned/arikawa/v3/discord"
 	emoji "github.com/tmdvs/Go-Emoji-Utils"
 	"strconv"
 )

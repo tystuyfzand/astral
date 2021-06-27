@@ -1,9 +1,10 @@
 package main
 
 import (
+	"context"
 	"flag"
-	"github.com/diamondburned/arikawa/v2/gateway"
-	"github.com/diamondburned/arikawa/v2/state"
+	"github.com/diamondburned/arikawa/v3/gateway"
+	"github.com/diamondburned/arikawa/v3/state"
 	"log"
 	"meow.tf/astral/arguments"
 	"meow.tf/astral/middleware"
@@ -83,7 +84,7 @@ func main() {
 		}).Alias("alias")
 	})
 
-	err = s.Open()
+	err = s.Open(context.Background())
 
 	if err != nil {
 		log.Fatalln("Unable to connect to Discord:", err)

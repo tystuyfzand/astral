@@ -3,9 +3,9 @@ package router
 import (
 	"errors"
 	"fmt"
-	"github.com/diamondburned/arikawa/v2/api"
-	"github.com/diamondburned/arikawa/v2/discord"
-	"github.com/diamondburned/arikawa/v2/utils/sendpart"
+	"github.com/diamondburned/arikawa/v3/api"
+	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/arikawa/v3/utils/sendpart"
 	"io"
 	"strings"
 )
@@ -41,7 +41,7 @@ func (c *Context) Send(text string) (*discord.Message, error) {
 		}
 	}
 
-	return c.Session.SendMessage(c.Channel.ID, text, nil)
+	return c.Session.SendMessage(c.Channel.ID, text)
 }
 
 // Sendf Sends formattable text to the originating channel
