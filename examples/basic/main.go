@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
 	"log"
@@ -18,8 +19,10 @@ import (
 )
 
 var (
-	flagToken  = flag.String("token", "", "Discord bot token")
-	flagPrefix = flag.String("prefix", "!", "Command prefix")
+	flagToken   = flag.String("token", "", "Discord bot token")
+	flagPrefix  = flag.String("prefix", "!", "Command prefix")
+	flagAppID   = flag.Int64("appID", 0, "App ID for commands")
+	flagGuildID = flag.Int64("guildID", 0, "Guild ID for commands")
 
 	route *router.Route
 )
@@ -39,22 +42,27 @@ func main() {
 	}
 
 	s.AddHandler(messageCreateHandler(s))
+	s.AddHandler(interactionHandler(s))
 
 	route = router.New()
 
 	ping := route.On("ping", func(ctx *router.Context) {
 		ctx.Reply("pong!")
-	})
+	}).Desc("Tests ping")
+
+	ping = ping.Export(true)
 
 	ping.On("pong", func(ctx *router.Context) {
 		ctx.Reply("I love ping pong!")
-	})
+	}).Desc("Tests pong")
 
 	// Test for registering commands with arguments
 	route.Group(func(r *router.Route) {
+		r.Export(true)
+
 		r.On("testing <type> <channel> [#discord channel] [message]", func(ctx *router.Context) {
 			ctx.Replyf("Arg1: %s, Arg2: %s", ctx.Arg("type"), ctx.Arg("channel"))
-		})
+		}).Desc("Testing command")
 	})
 
 	// Test for NSFW middleware
@@ -91,6 +99,14 @@ func main() {
 	}
 
 	log.Println("Ready.")
+
+	if *flagGuildID != 0 {
+		_, err := router.RegisterGuildCommands(route, s, discord.AppID(*flagAppID), discord.GuildID(*flagGuildID))
+
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
 
 	interrupt := make(chan os.Signal, 1)
 
@@ -130,23 +146,46 @@ func messageCreateHandler(s *state.State) func(evt *gateway.MessageCreateEvent) 
 			argString = strings.TrimSpace(str[idx+1:])
 		}
 
-		var command string
-
 		if len(args) > 1 {
-			command, args = args[0], args[1:]
+			_, args = args[0], args[1:]
 		} else {
-			command = str
 			args = []string{}
 		}
 
-		ctx, err := router.ContextFrom(s, evt, match, command, args, argString)
+		ctx, err := router.ContextFrom(s, evt, match, args, argString)
 
 		if err != nil {
 			log.Println("Unable to create context:", err)
 			return
 		}
 
-		ctx.Prefix = prefix
+		go match.Call(ctx)
+	}
+}
+
+func interactionHandler(s *state.State) func(evt *gateway.InteractionCreateEvent) {
+	return func(evt *gateway.InteractionCreateEvent) {
+		args := []string{evt.Data.Name}
+
+		for _, arg := range evt.Data.Options {
+			if arg.Value == nil {
+				args = append(args, arg.Name)
+			}
+		}
+
+		match := route.Find(args...)
+
+		if match == nil {
+			log.Println("No match for command args", args)
+			return
+		}
+
+		ctx, err := router.ContextFromInteraction(s, evt, match)
+
+		if err != nil {
+			log.Println("Unable to create context:", err)
+			return
+		}
 
 		go match.Call(ctx)
 	}

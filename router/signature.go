@@ -1,9 +1,30 @@
 package router
 
-import "strings"
+import (
+	"github.com/diamondburned/arikawa/v3/discord"
+	"strings"
+)
+
+type ArgumentType int
+
+// DiscordType returns the Discord CommandOptionType for an argument
+func (t ArgumentType) DiscordType() discord.CommandOptionType {
+	switch t {
+	case ArgumentTypeInt:
+		return discord.IntegerOption
+	case ArgumentTypeBool:
+		return discord.BooleanOption
+	case ArgumentTypeUserMention:
+		return discord.UserOption
+	case ArgumentTypeChannelMention:
+		return discord.ChannelOption
+	default:
+		return discord.StringOption
+	}
+}
 
 const (
-	ArgumentTypeBasic = iota
+	ArgumentTypeBasic ArgumentType = iota
 	ArgumentTypeInt
 	ArgumentTypeFloat
 	ArgumentTypeBool
@@ -13,9 +34,9 @@ const (
 )
 
 const (
-	argInt = "int"
+	argInt   = "int"
 	argFloat = "float"
-	argBool = "bool"
+	argBool  = "bool"
 )
 
 // parseSignature parses a route's signature
@@ -93,10 +114,10 @@ func parseSignature(r *Route, signature string) *Route {
 						}
 
 						r.Arguments[name] = &Argument{
-							Index: index,
-							Name: name,
+							Index:    index,
+							Name:     name,
 							Required: required,
-							Type: t,
+							Type:     t,
 						}
 
 						index++

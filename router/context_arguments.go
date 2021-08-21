@@ -9,7 +9,7 @@ import (
 // Find the specified argument nand return the information and value
 func (c *Context) arg(name string) (*Argument, string) {
 	if arg, exists := c.route.Arguments[name]; exists {
-		if arg.Index > len(c.Arguments)-1 {
+		if arg.Index > c.ArgumentCount-1 {
 			return arg, ""
 		}
 
@@ -19,14 +19,14 @@ func (c *Context) arg(name string) (*Argument, string) {
 	panic("undefined argument " + name)
 }
 
-// Find and return a named argument
+// Arg finds and returns a named argument as a string
 func (c *Context) Arg(name string) string {
 	_, val := c.arg(name)
 
 	return val
 }
 
-// Find and return a named int argument
+// IntArg finds and returns a named int argument
 func (c *Context) IntArg(name string) int64 {
 	arg, val := c.arg(name)
 
@@ -43,7 +43,7 @@ func (c *Context) IntArg(name string) int64 {
 	return v
 }
 
-// Find and return a named float argument
+// FloatArg finds and returns a named float argument
 func (c *Context) FloatArg(name string) float64 {
 	arg, val := c.arg(name)
 
@@ -60,7 +60,7 @@ func (c *Context) FloatArg(name string) float64 {
 	return v
 }
 
-// Find and return a named bool argument
+// BoolArg finds and returns a named bool argument
 func (c *Context) BoolArg(name string) bool {
 	arg, val := c.arg(name)
 
@@ -77,7 +77,7 @@ func (c *Context) BoolArg(name string) bool {
 	return v
 }
 
-// Find and return a named User argument
+// UserArg finds and returns a named User argument
 func (c *Context) UserArg(name string) *discord.User {
 	arg, val := c.arg(name)
 
@@ -106,12 +106,12 @@ func (c *Context) UserArg(name string) *discord.User {
 	return u
 }
 
-// Find and return a named Channel argument
+// ChannelArg finds and returns a named Channel argument
 func (c *Context) ChannelArg(name string) *discord.Channel {
 	return c.ChannelArgType(name, 255)
 }
 
-// Find and return a named Channel argument with a specified type
+// ChannelArgType finds and returns Channel argument with a specified type
 func (c *Context) ChannelArgType(name string, t discord.ChannelType) *discord.Channel {
 	arg, val := c.arg(name)
 
@@ -144,7 +144,7 @@ func (c *Context) ChannelArgType(name string, t discord.ChannelType) *discord.Ch
 	return nil
 }
 
-// Get an argument as a Discord emoji.
+// EmojiArg finds and returns an argument as an emoji
 func (c *Context) EmojiArg(name string) *discord.Emoji {
 	arg, val := c.arg(name)
 
