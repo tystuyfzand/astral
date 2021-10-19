@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
 	"strings"
@@ -23,14 +24,21 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 
 	args := make([]string, r.ArgumentCount)
 
-	for _, opt := range event.Data.Options {
-		arg, ok := r.Arguments[opt.Name]
-
-		if !ok {
-			continue
+	switch data := event.Data.(type) {
+	case *discord.ComponentInteractionData:
+		for i, opt := range data.Values {
+			args[i] = strings.Trim(opt, "\"")
 		}
+	case *discord.CommandInteractionData:
+		for _, opt := range data.Options {
+			arg, ok := r.Arguments[opt.Name]
 
-		args[arg.Index] = strings.Trim(opt.Value.String(), "\"")
+			if !ok {
+				continue
+			}
+
+			args[arg.Index] = strings.Trim(opt.Value.String(), "\"")
+		}
 	}
 
 	ctx := &Context{
