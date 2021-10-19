@@ -1,10 +1,12 @@
 package middleware
 
-import "meow.tf/astral/router"
+import (
+	"meow.tf/astral/router"
+)
 
 const (
-	ctxPrefix  = "middleware."
-	ctxError   = ctxPrefix + "err"
+	ctxPrefix = "middleware."
+	ctxError  = ctxPrefix + "err"
 )
 
 // CatchFunc function called if one of the middleware experiences an error
@@ -25,4 +27,24 @@ func callCatch(ctx *router.Context, fn CatchFunc, err error) {
 	}
 	ctx.Set(ctxError, err)
 	fn(ctx)
+}
+
+// RecoverFunc is a function called if a handler is recovered
+type RecoverFunc func(ctx *router.Context, v interface{})
+
+// Recoverer is a middleware to catch panics inside calls.
+// Usually, this is best to handle to make sure your code is working right, HOWEVER
+// this is useful to catch errors and log them instead of fatally erroring.
+func Recoverer(rec RecoverFunc) router.MiddlewareFunc {
+	return func(fn router.Handler) router.Handler {
+		return func(ctx *router.Context) {
+			defer func() {
+				if r := recover(); r != nil {
+					rec(ctx, r)
+				}
+			}()
+
+			fn(ctx)
+		}
+	}
 }
