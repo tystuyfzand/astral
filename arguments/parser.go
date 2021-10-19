@@ -1,6 +1,6 @@
 package arguments
 
-import "github.com/diamondburned/arikawa/v3/bot/extras/shellwords"
+import "github.com/diamondburned/arikawa/v3/utils/bot/extras/shellwords"
 
 // Parse parses a command argument string using a Space Tokenizer
 func Parse(command string) []string {
