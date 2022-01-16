@@ -8,28 +8,36 @@ import (
 	"strings"
 )
 
-// RoutePath finds a route path from a command interaction
-func RoutePath(options []discord.CommandInteractionOption) []string {
-	path := make([]string, 0)
+// FindInteraction finds a route path from a command interaction
+func (r *Route) FindInteraction(options []discord.CommandInteractionOption) *Route {
+	if len(r.routes) < 1 {
+		return r
+	}
 
 	opts := options
 
-	var pathPart string
+	currentRoute := r
+
+	var routeName string
 
 	for opts != nil {
-		pathPart, opts = recurseOptions(opts)
+		routeName, opts = recurseOptions(opts)
 
-		if pathPart != "" {
-			path = append(path, pathPart)
+		if routeName != "" {
+			if newRoute, exists := currentRoute.routes[routeName]; exists {
+				currentRoute = newRoute
+			} else {
+				break
+			}
 		}
 	}
 
-	return path
+	return currentRoute
 }
 
 func recurseOptions(options []discord.CommandInteractionOption) (string, []discord.CommandInteractionOption) {
 	for _, option := range options {
-		if option.Value == nil && option.Options != nil {
+		if option.Value == nil {
 			return option.Name, option.Options
 		}
 	}

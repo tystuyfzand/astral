@@ -89,7 +89,12 @@ func parseSignature(r *Route, signature string) *Route {
 							r.RequiredArgumentCount++
 						}
 
+						f = strings.Fields(name)
+
 						t := ArgumentTypeBasic
+
+						// Name = first field, no space support
+						name = f[0]
 
 						if name[0] == ':' {
 							t = ArgumentTypeEmoji
@@ -102,8 +107,6 @@ func parseSignature(r *Route, signature string) *Route {
 							name = name[1:]
 						}
 
-						f = strings.Fields(name)
-
 						arg := &Argument{
 							Type:     t,
 							Index:    index,
@@ -112,15 +115,12 @@ func parseSignature(r *Route, signature string) *Route {
 						}
 
 						if len(f) > 1 {
-							var err error
-							name, err = parseArgumentAttributes(arg, f)
+							err := parseArgumentAttributes(arg, f)
 
 							if err != nil {
 								panic("Invalid signature: " + err.Error())
 							}
 						}
-
-						arg.Name = name
 
 						r.Arguments[name] = arg
 
@@ -142,9 +142,7 @@ var (
 	prefixRe = regexp.MustCompile("([a-zA-Z0-9]+):(.*)")
 )
 
-func parseArgumentAttributes(arg *Argument, f []string) (string, error) {
-	retName := make([]string, 0)
-
+func parseArgumentAttributes(arg *Argument, f []string) error {
 	for _, field := range f {
 		switch field {
 		case argInt:
@@ -161,7 +159,6 @@ func parseArgumentAttributes(arg *Argument, f []string) (string, error) {
 		m := prefixRe.FindStringSubmatch(field)
 
 		if m == nil {
-			retName = append(retName, field)
 			continue
 		}
 
@@ -188,7 +185,7 @@ func parseArgumentAttributes(arg *Argument, f []string) (string, error) {
 			min, err := strToArgType(arg, m[2])
 
 			if err != nil {
-				return "", err
+				return err
 			}
 
 			arg.Min = min
@@ -196,16 +193,14 @@ func parseArgumentAttributes(arg *Argument, f []string) (string, error) {
 			max, err := strToArgType(arg, m[2])
 
 			if err != nil {
-				return "", err
+				return err
 			}
 
 			arg.Max = max
-		default:
-			retName = append(retName, field)
 		}
 	}
 
-	return strings.Join(retName, " "), nil
+	return nil
 }
 
 func strToArgType(arg *Argument, val string) (v interface{}, err error) {

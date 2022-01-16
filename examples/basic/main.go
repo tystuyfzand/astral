@@ -167,12 +167,14 @@ func interactionHandler(s *state.State) func(evt *gateway.InteractionCreateEvent
 			return
 		}
 
-		args := router.RoutePath(data.Options)
+		// Find root command
+		match := route.Find(data.Name)
 
-		match := route.Find(args...)
+		// Find subcommands if necessary
+		match = match.FindInteraction(data.Options)
 
 		if match == nil {
-			log.Println("No match for command args", args)
+			log.Println("No match for command args")
 			return
 		}
 
