@@ -24,12 +24,11 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 
 	args := make([]string, r.ArgumentCount)
 
-	switch data := event.Data.(type) {
-	case *discord.ComponentInteractionData:
-		for i, opt := range data.Values {
-			args[i] = strings.Trim(opt, "\"")
-		}
-	case *discord.CommandInteractionData:
+	event.Data.InteractionType()
+	switch event.Data.InteractionType() {
+	case discord.CommandInteractionType:
+		data := event.Data.(*discord.CommandInteraction)
+
 		for _, opt := range data.Options {
 			arg, ok := r.Arguments[opt.Name]
 

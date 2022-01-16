@@ -35,11 +35,7 @@ func main() {
 		gateway.IntentGuildMessages,
 	}
 
-	s, err := state.NewWithIntents("Bot "+*flagToken, intents...)
-
-	if err != nil {
-		log.Fatalln("Unable to create arikawa instance:", err)
-	}
+	s := state.NewWithIntents("Bot "+*flagToken, intents...)
 
 	s.AddHandler(messageCreateHandler(s))
 	s.AddHandler(interactionHandler(s))
@@ -92,7 +88,7 @@ func main() {
 		}).Alias("alias")
 	})
 
-	err = s.Open(context.Background())
+	err := s.Open(context.Background())
 
 	if err != nil {
 		log.Fatalln("Unable to connect to Discord:", err)
@@ -165,9 +161,15 @@ func messageCreateHandler(s *state.State) func(evt *gateway.MessageCreateEvent) 
 
 func interactionHandler(s *state.State) func(evt *gateway.InteractionCreateEvent) {
 	return func(evt *gateway.InteractionCreateEvent) {
-		args := []string{evt.Data.Name}
+		data, ok := evt.Data.(*discord.CommandInteraction)
 
-		for _, arg := range evt.Data.Options {
+		if !ok {
+			return
+		}
+
+		args := []string{data.Name}
+
+		for _, arg := range data.Options {
 			if arg.Value == nil {
 				args = append(args, arg.Name)
 			}

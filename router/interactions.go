@@ -90,10 +90,15 @@ func (r *Route) toCommandData() api.CreateCommandData {
 		i := 0
 
 		for _, route := range r.routes {
-			options[i] = discord.CommandOption{
-				Type:        discord.SubcommandOption,
-				Name:        route.Name,
-				Options:     argsFromRoute(route),
+			values := make([]discord.CommandOptionValue, 0)
+
+			for i, value := range argsFromRoute(route) {
+				values[i] = value.(discord.CommandOptionValue)
+			}
+
+			options[i] = &discord.SubcommandOption{
+				OptionName:  route.Name,
+				Options:     values,
 				Required:    false,
 				Description: route.Description,
 			}
@@ -146,12 +151,43 @@ func argsFromRoute(r *Route) []discord.CommandOption {
 	for _, arg := range r.Arguments {
 		argName := strings.ToLower(commandNameRe.ReplaceAllString(strings.ToLower(arg.Name), ""))
 
-		options[arg.Index] = discord.CommandOption{
-			Type:     arg.Type.DiscordType(),
-			Name:     argName,
-			Required: arg.Required,
-			// TODO: Argument descriptions
-			Description: "The " + arg.Name + " argument",
+		switch arg.Type {
+		case ArgumentTypeInt:
+			options[arg.Index] = &discord.IntegerOption{
+				OptionName:  argName,
+				Required:    arg.Required,
+				Description: "The " + arg.Name + " argument",
+			}
+		case ArgumentTypeFloat:
+			options[arg.Index] = &discord.NumberOption{
+				OptionName:  argName,
+				Required:    arg.Required,
+				Description: "The " + arg.Name + " argument",
+			}
+		case ArgumentTypeBool:
+			options[arg.Index] = &discord.BooleanOption{
+				OptionName:  argName,
+				Required:    arg.Required,
+				Description: "The " + arg.Name + " argument",
+			}
+		case ArgumentTypeUserMention:
+			options[arg.Index] = &discord.UserOption{
+				OptionName:  argName,
+				Required:    arg.Required,
+				Description: "The " + arg.Name + " argument",
+			}
+		case ArgumentTypeChannelMention:
+			options[arg.Index] = &discord.ChannelOption{
+				OptionName:  argName,
+				Required:    arg.Required,
+				Description: "The " + arg.Name + " argument",
+			}
+		case ArgumentTypeBasic:
+			options[arg.Index] = &discord.StringOption{
+				OptionName:  argName,
+				Required:    arg.Required,
+				Description: "The " + arg.Name + " argument",
+			}
 		}
 	}
 

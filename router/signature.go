@@ -11,15 +11,15 @@ type ArgumentType int
 func (t ArgumentType) DiscordType() discord.CommandOptionType {
 	switch t {
 	case ArgumentTypeInt:
-		return discord.IntegerOption
+		return discord.IntegerOptionType
 	case ArgumentTypeBool:
-		return discord.BooleanOption
+		return discord.BooleanOptionType
 	case ArgumentTypeUserMention:
-		return discord.UserOption
+		return discord.UserOptionType
 	case ArgumentTypeChannelMention:
-		return discord.ChannelOption
+		return discord.ChannelOptionType
 	default:
-		return discord.StringOption
+		return discord.StringOptionType
 	}
 }
 
