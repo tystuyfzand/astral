@@ -1,7 +1,6 @@
 package router
 
 import (
-	"fmt"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
@@ -30,22 +29,11 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 	case discord.CommandInteractionType:
 		data := event.Data.(*discord.CommandInteraction)
 
-		start := 0
-
-		// Calculate starting position of arguments based on nesting level of route
-		// Root = 0. Every additional parent adds 1, which magically returns where we are because:
-		// If parent = ping, and subcommand = pong, start = 1. Thus, options will have 1 parameter we need to skip.
-		parent := r.parent
-
-		for parent != nil && parent.Name != "" {
-			start++
-		}
-
-		for _, opt := range data.Options[start:] {
+		for _, opt := range data.Options {
 			arg, ok := r.Arguments[opt.Name]
 
 			if !ok {
-				return nil, fmt.Errorf("%s is not a valid argument name", opt.Name)
+				continue
 			}
 
 			var val string
