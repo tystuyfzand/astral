@@ -1,6 +1,7 @@
 package router
 
 import (
+	"encoding/csv"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"strings"
 )
@@ -78,10 +79,13 @@ func parseSignature(r *Route, signature string) *Route {
 							str = ""
 						}
 
-						required := false
+						arg := &Argument{
+							Index: index,
+							Name:  name,
+						}
 
 						if ch == '<' {
-							required = true
+							arg.Required = true
 
 							r.RequiredArgumentCount++
 						}
@@ -111,14 +115,25 @@ func parseSignature(r *Route, signature string) *Route {
 								t = ArgumentTypeBool
 								name = f[0]
 							}
+
+							for _, field := range f {
+								if strings.HasPrefix(field, "options:") {
+									reader := csv.NewReader(strings.NewReader(field[8:]))
+
+									values, err := reader.Read()
+
+									if err != nil {
+										continue
+									}
+
+									arg.Options = values
+								}
+							}
 						}
 
-						r.Arguments[name] = &Argument{
-							Index:    index,
-							Name:     name,
-							Required: required,
-							Type:     t,
-						}
+						arg.Type = t
+
+						r.Arguments[name] = arg
 
 						index++
 

@@ -35,14 +35,6 @@ type Route struct {
 	RequiredArgumentCount int
 }
 
-// Argument type contains defined arguments, parsed from the command signature
-type Argument struct {
-	Index    int
-	Name     string
-	Required bool
-	Type     ArgumentType
-}
-
 // New creates a new, empty route.
 func New() *Route {
 	return &Route{

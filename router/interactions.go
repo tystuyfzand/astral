@@ -154,41 +154,59 @@ func argsFromRoute(r *Route) []discord.CommandOption {
 
 		switch arg.Type {
 		case ArgumentTypeInt:
-			options[arg.Index] = &discord.IntegerOption{
+			opt := &discord.IntegerOption{
 				OptionName:  argName,
 				Required:    arg.Required,
-				Description: "The " + arg.Name + " argument",
+				Description: arg.Description,
 			}
+
+			if len(arg.Options) > 0 {
+				opt.Choices = arg.integerChoices()
+			}
+
+			options[arg.Index] = opt
 		case ArgumentTypeFloat:
-			options[arg.Index] = &discord.NumberOption{
+			opt := &discord.NumberOption{
 				OptionName:  argName,
 				Required:    arg.Required,
-				Description: "The " + arg.Name + " argument",
+				Description: arg.Description,
 			}
+
+			if len(arg.Options) > 0 {
+				opt.Choices = arg.numberChoices()
+			}
+
+			options[arg.Index] = opt
 		case ArgumentTypeBool:
 			options[arg.Index] = &discord.BooleanOption{
 				OptionName:  argName,
 				Required:    arg.Required,
-				Description: "The " + arg.Name + " argument",
+				Description: arg.Description,
 			}
 		case ArgumentTypeUserMention:
 			options[arg.Index] = &discord.UserOption{
 				OptionName:  argName,
 				Required:    arg.Required,
-				Description: "The " + arg.Name + " argument",
+				Description: arg.Description,
 			}
 		case ArgumentTypeChannelMention:
 			options[arg.Index] = &discord.ChannelOption{
 				OptionName:  argName,
 				Required:    arg.Required,
-				Description: "The " + arg.Name + " argument",
+				Description: arg.Description,
 			}
 		case ArgumentTypeBasic:
-			options[arg.Index] = &discord.StringOption{
+			opt := &discord.StringOption{
 				OptionName:  argName,
 				Required:    arg.Required,
-				Description: "The " + arg.Name + " argument",
+				Description: arg.Description,
 			}
+
+			if len(arg.Options) > 0 {
+				opt.Choices = arg.stringChoices()
+			}
+
+			options[arg.Index] = opt
 		}
 	}
 
