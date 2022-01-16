@@ -5,7 +5,7 @@ import "testing"
 func TestParseSignature(t *testing.T) {
 	r := New()
 
-	parseSignature(r, "test <stringarg> <:emojiarg> <@mentionarg> <#channelarg> <intarg int min:1> [optional val int min:1] <floatarg float> <boolarg bool> [optional]")
+	parseSignature(r, "test <string arg> <:emoji arg> <@mention arg> <#channel arg> <intarg int min:1> [optional val int min:1] <floatarg float> <boolarg bool> [optional]")
 
 	if r.ArgumentCount < 8 {
 		t.Fatal("Expected 8 arguments")
@@ -15,20 +15,20 @@ func TestParseSignature(t *testing.T) {
 		t.Fatal("Expected optional argument to not be required")
 	}
 
-	if basic, exists := r.Arguments["stringarg"]; !exists || basic.Type != ArgumentTypeBasic {
-		t.Fatal("Expected stringarg to be type Basic")
+	if basic, exists := r.Arguments["string arg"]; !exists || basic.Type != ArgumentTypeBasic {
+		t.Fatal("Expected string arg to be type Basic")
 	}
 
-	if emoji, exists := r.Arguments["emojiarg"]; !exists || emoji.Type != ArgumentTypeEmoji {
-		t.Fatal("Expected emojiarg to be type Emoji")
+	if emoji, exists := r.Arguments["emoji arg"]; !exists || emoji.Type != ArgumentTypeEmoji {
+		t.Fatal("Expected emoji arg to be type Emoji")
 	}
 
-	if mention, exists := r.Arguments["mentionarg"]; !exists || mention.Type != ArgumentTypeUserMention {
-		t.Fatal("Expected mentionarg to be type UserMention")
+	if mention, exists := r.Arguments["mention arg"]; !exists || mention.Type != ArgumentTypeUserMention {
+		t.Fatal("Expected mention arg to be type UserMention")
 	}
 
-	if channel, exists := r.Arguments["channelarg"]; !exists || channel.Type != ArgumentTypeChannelMention {
-		t.Fatal("Expected channelarg to be type Channel")
+	if channel, exists := r.Arguments["channel arg"]; !exists || channel.Type != ArgumentTypeChannelMention {
+		t.Fatal("Expected channel arg to be type Channel")
 	}
 
 	if intArg, exists := r.Arguments["intarg"]; !exists || intArg.Type != ArgumentTypeInt {
@@ -45,15 +45,5 @@ func TestParseSignature(t *testing.T) {
 
 	if boolArg, exists := r.Arguments["boolarg"]; !exists || boolArg.Type != ArgumentTypeBool {
 		t.Fatal("Expected boolarg to be type bool")
-	}
-}
-
-func TestSomething(t *testing.T) {
-	r := New()
-
-	parseSignature(r, "track <type> <channel> [#discord channel] [message]")
-
-	for argName, arg := range r.Arguments {
-		t.Log("Argument", argName, "->", arg.Name, "type", arg.Type)
 	}
 }

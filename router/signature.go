@@ -91,8 +91,6 @@ func parseSignature(r *Route, signature string) *Route {
 
 						t := ArgumentTypeBasic
 
-						f = strings.Fields(name)
-
 						if name[0] == ':' {
 							t = ArgumentTypeEmoji
 							name = name[1:]
@@ -103,6 +101,8 @@ func parseSignature(r *Route, signature string) *Route {
 							t = ArgumentTypeChannelMention
 							name = name[1:]
 						}
+
+						f = strings.Fields(name)
 
 						arg := &Argument{
 							Type:     t,
