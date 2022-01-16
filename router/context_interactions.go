@@ -30,7 +30,18 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 	case discord.CommandInteractionType:
 		data := event.Data.(*discord.CommandInteraction)
 
-		for _, opt := range data.Options {
+		start := 0
+
+		// Calculate starting position of arguments based on nesting level of route
+		// Root = 0. Every additional parent adds 1, which magically returns where we are because:
+		// If parent = ping, and subcommand = pong, start = 1. Thus, options will have 1 parameter we need to skip.
+		parent := r.parent
+
+		for parent != nil && parent.Name != "" {
+			start++
+		}
+
+		for _, opt := range data.Options[start:] {
 			arg, ok := r.Arguments[opt.Name]
 
 			if !ok {
