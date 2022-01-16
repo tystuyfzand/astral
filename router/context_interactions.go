@@ -8,6 +8,35 @@ import (
 	"strings"
 )
 
+// RoutePath finds a route path from a command interaction
+func RoutePath(options []discord.CommandInteractionOption) []string {
+	path := make([]string, 0)
+
+	opts := options
+
+	var pathPart string
+
+	for opts != nil {
+		pathPart, opts = recurseOptions(opts)
+
+		if pathPart != "" {
+			path = append(path, pathPart)
+		}
+	}
+
+	return path
+}
+
+func recurseOptions(options []discord.CommandInteractionOption) (string, []discord.CommandInteractionOption) {
+	for _, option := range options {
+		if option.Value == nil && option.Options != nil {
+			return option.Name, option.Options
+		}
+	}
+
+	return "", nil
+}
+
 // ContextFromInteraction creates a new Context from an interaction event
 func ContextFromInteraction(state *state.State, event *gateway.InteractionCreateEvent, r *Route) (*Context, error) {
 	// Find the guild for that channel. This uses State if enabled.
@@ -30,13 +59,10 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 	case discord.CommandInteractionType:
 		data := event.Data.(*discord.CommandInteraction)
 
-		for _, opt := range data.Options {
-			// TODO: Is this even valid?
-			// This skips values which are simply subcommand types...
-			if opt.Value == nil {
-				continue
-			}
+		path := r.Path()
+		path = path[1:]
 
+		for _, opt := range optionsFromPath(path, data.Options) {
 			for _, arg := range r.Arguments {
 				argName := strings.ToLower(commandNameRe.ReplaceAllString(strings.ToLower(arg.Name), ""))
 
@@ -99,4 +125,19 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 	ctx.responder = &InteractionResponder{ctx}
 
 	return ctx, nil
+}
+
+func optionsFromPath(path []string, options []discord.CommandInteractionOption) []discord.CommandInteractionOption {
+	if len(path) < 1 {
+		return options
+	}
+
+	for _, opt := range options {
+		if opt.Name == path[0] {
+			// Recurse deeper until we're at path depth (path < 1)
+			return optionsFromPath(path[1:], opt.Options)
+		}
+	}
+
+	return nil
 }

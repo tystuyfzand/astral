@@ -167,13 +167,7 @@ func interactionHandler(s *state.State) func(evt *gateway.InteractionCreateEvent
 			return
 		}
 
-		args := []string{data.Name}
-
-		for _, arg := range data.Options {
-			if arg.Value == nil {
-				args = append(args, arg.Name)
-			}
-		}
+		args := router.RoutePath(data.Options)
 
 		match := route.Find(args...)
 

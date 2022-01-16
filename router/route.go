@@ -44,6 +44,26 @@ func New() *Route {
 	}
 }
 
+// Path returns the route's full path
+func (r *Route) Path() []string {
+	path := []string{r.Name}
+
+	parent := r.parent
+
+	for parent != nil && parent.Name != "" {
+		path = append(path, parent.Name)
+
+		parent = parent.parent
+	}
+
+	// Reverse path
+	for i, j := 0, len(path)-1; i < j; i, j = i+1, j-1 {
+		path[i], path[j] = path[j], path[i]
+	}
+
+	return path
+}
+
 // Add adds a sub route to this route.
 func (r *Route) Add(n *Route) *Route {
 	r.routes[n.Name] = n
