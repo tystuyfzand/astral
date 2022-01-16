@@ -5,6 +5,12 @@ import (
 	"strconv"
 )
 
+// StringChoice is a basic wrapper for name/value choices
+type StringChoice struct {
+	Name  string
+	Value string
+}
+
 // Argument type contains defined arguments, parsed from the command signature
 type Argument struct {
 	Index       int
@@ -12,23 +18,23 @@ type Argument struct {
 	Description string
 	Required    bool
 	Type        ArgumentType
-	Options     []string
+	Choices     []StringChoice
 	Min         interface{}
 	Max         interface{}
 }
 
 func (a *Argument) integerChoices() []discord.IntegerChoice {
-	choices := make([]discord.IntegerChoice, len(a.Options))
+	choices := make([]discord.IntegerChoice, len(a.Choices))
 
-	for i, choice := range a.Options {
-		v, err := strconv.Atoi(choice)
+	for i, choice := range a.Choices {
+		v, err := strconv.Atoi(choice.Value)
 
 		if err != nil {
 			continue
 		}
 
 		choices[i] = discord.IntegerChoice{
-			Name:  choice,
+			Name:  choice.Name,
 			Value: v,
 		}
 	}
@@ -37,17 +43,17 @@ func (a *Argument) integerChoices() []discord.IntegerChoice {
 }
 
 func (a *Argument) numberChoices() []discord.NumberChoice {
-	choices := make([]discord.NumberChoice, len(a.Options))
+	choices := make([]discord.NumberChoice, len(a.Choices))
 
-	for i, choice := range a.Options {
-		v, err := strconv.ParseFloat(choice, 64)
+	for i, choice := range a.Choices {
+		v, err := strconv.ParseFloat(choice.Value, 64)
 
 		if err != nil {
 			continue
 		}
 
 		choices[i] = discord.NumberChoice{
-			Name:  choice,
+			Name:  choice.Name,
 			Value: v,
 		}
 	}
@@ -56,12 +62,12 @@ func (a *Argument) numberChoices() []discord.NumberChoice {
 }
 
 func (a *Argument) stringChoices() []discord.StringChoice {
-	choices := make([]discord.StringChoice, len(a.Options))
+	choices := make([]discord.StringChoice, len(a.Choices))
 
-	for i, choice := range a.Options {
+	for i, choice := range a.Choices {
 		choices[i] = discord.StringChoice{
-			Name:  choice,
-			Value: choice,
+			Name:  choice.Name,
+			Value: choice.Value,
 		}
 	}
 

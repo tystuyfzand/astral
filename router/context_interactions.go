@@ -1,6 +1,7 @@
 package router
 
 import (
+	"fmt"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
@@ -33,7 +34,7 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 			arg, ok := r.Arguments[opt.Name]
 
 			if !ok {
-				continue
+				return nil, fmt.Errorf("%s is not a valid argument name", opt.Name)
 			}
 
 			var val string

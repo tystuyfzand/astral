@@ -223,7 +223,7 @@ func argsFromRoute(r *Route) ([]discord.CommandOption, error) {
 				Description: arg.Description,
 			}
 
-			if len(arg.Options) > 0 {
+			if len(arg.Choices) > 0 {
 				opt.Choices = arg.integerChoices()
 			}
 
@@ -235,7 +235,7 @@ func argsFromRoute(r *Route) ([]discord.CommandOption, error) {
 				Description: arg.Description,
 			}
 
-			if len(arg.Options) > 0 {
+			if len(arg.Choices) > 0 {
 				opt.Choices = arg.numberChoices()
 			}
 
@@ -265,7 +265,7 @@ func argsFromRoute(r *Route) ([]discord.CommandOption, error) {
 				Description: arg.Description,
 			}
 
-			if len(arg.Options) > 0 {
+			if len(arg.Choices) > 0 {
 				opt.Choices = arg.stringChoices()
 			}
 

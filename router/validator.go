@@ -59,12 +59,12 @@ func (r *Route) Validate(ctx *Context) error {
 			return err
 		}
 
-		if len(arg.Options) > 0 {
+		if len(arg.Choices) > 0 {
 			// Ensure options contains value
 			found := false
 
-			for _, value := range arg.Options {
-				if value == argValue {
+			for _, value := range arg.Choices {
+				if value.Value == argValue {
 					found = true
 					break
 				}
