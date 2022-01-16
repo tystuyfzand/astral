@@ -1,7 +1,6 @@
 package router
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -29,6 +28,43 @@ func (r registrationError) Error() string {
 	}
 
 	return "command registration error on " + r.route.Name + ": " + r.cause.Error()
+}
+
+type commandDescriptionError struct {
+	route *Route
+}
+
+func (e commandDescriptionError) Error() string {
+	var path []string
+
+	parent := e.route.parent
+
+	for parent != nil {
+		path = append([]string{parent.Name}, path...)
+
+		parent = parent.parent
+	}
+
+	return "invalid command description for " + strings.Join(path, "->") + ": " + e.route.Description
+}
+
+type argDescriptionError struct {
+	route *Route
+	arg   *Argument
+}
+
+func (e argDescriptionError) Error() string {
+	var path []string
+
+	parent := e.route.parent
+
+	for parent != nil {
+		path = append([]string{parent.Name}, path...)
+
+		parent = parent.parent
+	}
+
+	return "invalid argument description for " + strings.Join(path, "->") + " arg " + e.arg.Name + ": " + e.arg.Description
 }
 
 // RegisterCommands registers all sub routes as interaction/slash commands
@@ -78,10 +114,14 @@ func RegisterGuildCommands(r *Route, s *state.State, appID discord.AppID, guildI
 	return commands, nil
 }
 
-func (r *Route) toCommandData() api.CreateCommandData {
+func (r *Route) toCommandData() (api.CreateCommandData, error) {
 	data := api.CreateCommandData{
 		Name:        r.Name,
 		Description: r.Description,
+	}
+
+	if r.Description == "" {
+		return data, commandDescriptionError{route: r}
 	}
 
 	if len(r.routes) > 0 {
@@ -90,7 +130,12 @@ func (r *Route) toCommandData() api.CreateCommandData {
 		i := 0
 
 		for _, route := range r.routes {
-			inputValues := argsFromRoute(route)
+			inputValues, err := argsFromRoute(route)
+
+			if err != nil {
+				return data, err
+			}
+
 			values := make([]discord.CommandOptionValue, len(inputValues))
 
 			for k, value := range inputValues {
@@ -109,15 +154,25 @@ func (r *Route) toCommandData() api.CreateCommandData {
 
 		data.Options = options
 	} else {
-		data.Options = argsFromRoute(r)
+		args, err := argsFromRoute(r)
+
+		if err != nil {
+			return data, err
+		}
+
+		data.Options = args
 	}
 
-	return data
+	return data, nil
 }
 
 // RegisterCommand registers a single command, with sub routes as subcommands.
 func (r *Route) RegisterCommand(s *state.State, appID discord.AppID, guildID discord.GuildID) (*discord.Command, error) {
-	data := r.toCommandData()
+	data, err := r.toCommandData()
+
+	if err != nil {
+		return nil, err
+	}
 
 	if guildID != discord.NullGuildID {
 		return s.CreateGuildCommand(appID, guildID, data)
@@ -128,11 +183,11 @@ func (r *Route) RegisterCommand(s *state.State, appID discord.AppID, guildID dis
 
 // UpdateCommand registers a single command, with sub routes as subcommands.
 func (r *Route) UpdateCommand(s *state.State, appID discord.AppID, commandID discord.CommandID, guildID discord.GuildID) (*discord.Command, error) {
-	data := r.toCommandData()
+	data, err := r.toCommandData()
 
-	b, _ := json.Marshal(data)
-
-	log.Println(string(b))
+	if err != nil {
+		return nil, err
+	}
 
 	if guildID != discord.NullGuildID {
 		return s.EditGuildCommand(appID, guildID, commandID, data)
@@ -146,11 +201,15 @@ var (
 )
 
 // argsFromRoute takes a route's arguments and translates them into a discord.CommandOption
-func argsFromRoute(r *Route) []discord.CommandOption {
+func argsFromRoute(r *Route) ([]discord.CommandOption, error) {
 	options := make([]discord.CommandOption, len(r.Arguments))
 
 	for _, arg := range r.Arguments {
 		argName := strings.ToLower(commandNameRe.ReplaceAllString(strings.ToLower(arg.Name), ""))
+
+		if arg.Description == "" {
+			return nil, argDescriptionError{route: r, arg: arg}
+		}
 
 		switch arg.Type {
 		case ArgumentTypeInt:
@@ -210,5 +269,5 @@ func argsFromRoute(r *Route) []discord.CommandOption {
 		}
 	}
 
-	return options
+	return options, nil
 }
