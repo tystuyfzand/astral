@@ -40,7 +40,9 @@ func (e commandDescriptionError) Error() string {
 	parent := e.route.parent
 
 	for parent != nil {
-		path = append([]string{parent.Name}, path...)
+		if parent.Name != "" {
+			path = append([]string{parent.Name}, path...)
+		}
 
 		parent = parent.parent
 	}
@@ -59,7 +61,9 @@ func (e argDescriptionError) Error() string {
 	parent := e.route.parent
 
 	for parent != nil {
-		path = append([]string{parent.Name}, path...)
+		if parent.Name != "" {
+			path = append([]string{parent.Name}, path...)
+		}
 
 		parent = parent.parent
 	}
