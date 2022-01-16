@@ -90,9 +90,10 @@ func (r *Route) toCommandData() api.CreateCommandData {
 		i := 0
 
 		for _, route := range r.routes {
-			values := make([]discord.CommandOptionValue, 0)
+			inputValues := argsFromRoute(route)
+			values := make([]discord.CommandOptionValue, len(inputValues))
 
-			for k, value := range argsFromRoute(route) {
+			for k, value := range inputValues {
 				values[k] = value.(discord.CommandOptionValue)
 			}
 
