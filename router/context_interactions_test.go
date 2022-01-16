@@ -25,11 +25,6 @@ func testInteractionData2() []discord.CommandInteractionOption {
 	return []discord.CommandInteractionOption{
 		{
 			Name: "something",
-			Options: []discord.CommandInteractionOption{
-				{
-					Name: "cool",
-				},
-			},
 		},
 	}
 }
@@ -49,13 +44,13 @@ func TestOptions(t *testing.T) {
 func TestRoutePath(t *testing.T) {
 	r := New()
 
-	r.On("something", nil).On("cool", nil)
+	r.On("test", nil).On("something", nil)
 
-	route := r.FindInteraction(testInteractionData2())
+	route := r.FindInteraction("test", testInteractionData2())
 
 	path := route.Path()
 
-	if len(path) < 2 || path[0] != "something" || path[1] != "cool" {
+	if len(path) < 2 || path[0] != "test" && path[1] != "something" {
 		t.Fatal("Expected path to be something, cool - got:", path)
 	}
 

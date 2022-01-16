@@ -9,14 +9,18 @@ import (
 )
 
 // FindInteraction finds a route path from a command interaction
-func (r *Route) FindInteraction(options []discord.CommandInteractionOption) *Route {
+func (r *Route) FindInteraction(parentRoute string, options []discord.CommandInteractionOption) *Route {
 	if len(r.routes) < 1 {
 		return r
 	}
 
 	opts := options
 
-	currentRoute := r
+	currentRoute := r.routes[parentRoute]
+
+	if currentRoute == nil {
+		return nil
+	}
 
 	var routeName string
 
