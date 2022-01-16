@@ -35,12 +35,12 @@ func (m *InteractionResponder) Send(text string) (*discord.Message, error) {
 		return nil, err
 	}
 
-	return m.ctx.Session.SendMessage(m.ctx.Channel.ID, text)
+	return m.Reply(text)
 }
 
 // Sendf Sends formattable text to the originating channel
 func (m *InteractionResponder) Sendf(format string, a ...interface{}) (*discord.Message, error) {
-	return m.Send(fmt.Sprintf(format, a...))
+	return m.Reply(fmt.Sprintf(format, a...))
 }
 
 // SendFile sends a file by name and the data from r
@@ -61,7 +61,7 @@ func (m *InteractionResponder) Replyf(format string, a ...interface{}) (*discord
 
 // ReplyTo replies to a specific user
 func (m *InteractionResponder) ReplyTo(to discord.UserID, text string) (*discord.Message, error) {
-	return m.Send(fmt.Sprintf("%s %s", to.Mention(), text))
+	return m.Reply(fmt.Sprintf("%s %s", to.Mention(), text))
 }
 
 // Reply with a user mention
