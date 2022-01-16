@@ -3,6 +3,8 @@ package router
 import (
 	"encoding/csv"
 	"github.com/diamondburned/arikawa/v3/discord"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -79,13 +81,10 @@ func parseSignature(r *Route, signature string) *Route {
 							str = ""
 						}
 
-						arg := &Argument{
-							Index: index,
-							Name:  name,
-						}
+						required := false
 
 						if ch == '<' {
-							arg.Required = true
+							required = true
 
 							r.RequiredArgumentCount++
 						}
@@ -103,7 +102,16 @@ func parseSignature(r *Route, signature string) *Route {
 						} else if name[0] == '#' {
 							t = ArgumentTypeChannelMention
 							name = name[1:]
-						} else if len(f) > 1 {
+						}
+
+						arg := &Argument{
+							Type:     t,
+							Index:    index,
+							Name:     name,
+							Required: required,
+						}
+
+						if len(f) > 1 {
 							switch f[1] {
 							case argInt:
 								t = ArgumentTypeInt
@@ -116,22 +124,8 @@ func parseSignature(r *Route, signature string) *Route {
 								name = f[0]
 							}
 
-							for _, field := range f {
-								if strings.HasPrefix(field, "options:") {
-									reader := csv.NewReader(strings.NewReader(field[8:]))
-
-									values, err := reader.Read()
-
-									if err != nil {
-										continue
-									}
-
-									arg.Options = values
-								}
-							}
+							parseArgumentAttributes(arg, f)
 						}
-
-						arg.Type = t
 
 						r.Arguments[name] = arg
 
@@ -147,4 +141,61 @@ func parseSignature(r *Route, signature string) *Route {
 	}
 
 	return r
+}
+
+var (
+	prefixRe = regexp.MustCompile("([a-zA-Z0-9]+):(.*)")
+)
+
+func parseArgumentAttributes(arg *Argument, f []string) error {
+	for _, field := range f {
+		m := prefixRe.FindStringSubmatch(field)
+
+		if m == nil {
+			continue
+		}
+
+		field = m[2]
+
+		switch m[1] {
+		case "options":
+			reader := csv.NewReader(strings.NewReader(m[2]))
+
+			values, err := reader.Read()
+
+			if err != nil {
+				continue
+			}
+
+			arg.Options = values
+		case "min":
+			min, err := strToArgType(arg, m[2])
+
+			if err != nil {
+				return err
+			}
+
+			arg.Min = min
+		case "max":
+			max, err := strToArgType(arg, m[2])
+
+			if err != nil {
+				return err
+			}
+
+			arg.Max = max
+		}
+	}
+
+	return nil
+}
+
+func strToArgType(arg *Argument, val string) (v interface{}, err error) {
+	switch arg.Type {
+	case ArgumentTypeInt:
+		v, err = strconv.ParseInt(val, 10, 64)
+	case ArgumentTypeFloat:
+		v, err = strconv.ParseFloat(val, 64)
+	}
+	return
 }

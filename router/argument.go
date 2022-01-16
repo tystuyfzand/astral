@@ -13,18 +13,8 @@ type Argument struct {
 	Required    bool
 	Type        ArgumentType
 	Options     []string
-}
-
-func (a *Argument) choices() interface{} {
-	if len(a.Options) == 0 {
-		return nil
-	}
-
-	switch a.Type {
-	case ArgumentTypeInt:
-	}
-
-	return nil
+	Min         interface{}
+	Max         interface{}
 }
 
 func (a *Argument) integerChoices() []discord.IntegerChoice {

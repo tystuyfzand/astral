@@ -2,6 +2,7 @@ package router
 
 import (
 	"errors"
+	"fmt"
 	"github.com/diamondburned/arikawa/v3/discord"
 	emoji "github.com/tmdvs/Go-Emoji-Utils"
 	"regexp"
@@ -9,8 +10,9 @@ import (
 )
 
 var (
-	UsageError  = errors.New("usage")
-	emojiRegexp = regexp.MustCompile("<(a?):(.+?):(\\d+)>")
+	UsageError      = errors.New("usage")
+	ErrInvalidValue = errors.New("unknown argument value")
+	emojiRegexp     = regexp.MustCompile("<(a?):(.+?):(\\d+)>")
 )
 
 // Validate checks the context against the Route's defined arguments and ensures all required arguments
@@ -35,7 +37,7 @@ func (r *Route) Validate(ctx *Context) error {
 		argValue = ctx.Arguments[arg.Index]
 
 		if argValue == "" {
-			return errors.New("The " + arg.Name + " argument is required.")
+			return fmt.Errorf("The %s argument is required.", arg.Name)
 		}
 
 		switch arg.Type {
@@ -56,6 +58,22 @@ func (r *Route) Validate(ctx *Context) error {
 		if err != nil {
 			return err
 		}
+
+		if len(arg.Options) > 0 {
+			// Ensure options contains value
+			found := false
+
+			for _, value := range arg.Options {
+				if value == argValue {
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				return ErrInvalidValue
+			}
+		}
 	}
 
 	return nil
@@ -63,10 +81,18 @@ func (r *Route) Validate(ctx *Context) error {
 
 // validateInt checks an integer argument to ensure it's a valid integer
 func validateInt(ctx *Context, arg *Argument, argValue string) error {
-	_, err := strconv.ParseInt(argValue, 10, 64)
+	v, err := strconv.ParseInt(argValue, 10, 64)
 
 	if err != nil {
-		return errors.New(arg.Name + " must be an integer.")
+		return fmt.Errorf("%s must be an integer.", arg.Name)
+	}
+
+	if arg.Min != nil && v < arg.Min.(int64) {
+		return fmt.Errorf("%s must be larger than %d.", arg.Name, arg.Min)
+	}
+
+	if arg.Max != nil && v < arg.Max.(int64) {
+		return fmt.Errorf("%s must be smaller than %d.", arg.Name, arg.Max)
 	}
 
 	return nil
@@ -74,10 +100,18 @@ func validateInt(ctx *Context, arg *Argument, argValue string) error {
 
 // validateFloat checks an integer argument to ensure it's a valid float
 func validateFloat(ctx *Context, arg *Argument, argValue string) error {
-	_, err := strconv.ParseFloat(argValue, 64)
+	v, err := strconv.ParseFloat(argValue, 64)
 
 	if err != nil {
-		return errors.New(arg.Name + " must be an float.")
+		return fmt.Errorf("%s must be a floating point number.", arg.Name)
+	}
+
+	if arg.Min != nil && v < arg.Min.(float64) {
+		return fmt.Errorf("%s must be larger than %f.", arg.Name, arg.Min)
+	}
+
+	if arg.Max != nil && v < arg.Max.(float64) {
+		return fmt.Errorf("%s must be smaller than %f.", arg.Name, arg.Max)
 	}
 
 	return nil
@@ -88,7 +122,7 @@ func validateBool(ctx *Context, arg *Argument, argValue string) error {
 	_, err := strconv.ParseBool(argValue)
 
 	if err != nil {
-		return errors.New(arg.Name + " must be a true/false value.")
+		return fmt.Errorf("%s must be a true/false value.", arg.Name)
 	}
 
 	return nil
@@ -106,7 +140,7 @@ func validateEmoji(ctx *Context, arg *Argument, argValue string) error {
 		return nil
 	}
 
-	return errors.New(arg.Name + " must be a valid emoji.")
+	return fmt.Errorf("%s must be a valid emoji.", arg.Name)
 }
 
 // validateUserMention checks a user mention argument to ensure the user exists
@@ -114,7 +148,7 @@ func validateUserMention(ctx *Context, arg *Argument, argValue string) error {
 	m := userMentionRegexp.FindStringSubmatch(argValue)
 
 	if m == nil {
-		return errors.New(arg.Name + " must be a user.")
+		return fmt.Errorf("%s must be a valid user.", arg.Name)
 	}
 
 	sf, err := discord.ParseSnowflake(m[1])
@@ -130,7 +164,7 @@ func validateUserMention(ctx *Context, arg *Argument, argValue string) error {
 	}
 
 	// User is not in this guild/doesn't exist.
-	return errors.New(arg.Name + " must be a user.")
+	return fmt.Errorf("%s must be a valid user.", arg.Name)
 }
 
 // validateChannelMention checks a channel mention argument to ensure the channel exists
@@ -138,7 +172,7 @@ func validateChannelMention(ctx *Context, arg *Argument, argValue string) error 
 	m := channelMentionRegexp.FindStringSubmatch(argValue)
 
 	if m == nil {
-		return errors.New(arg.Name + " must be a channel.")
+		return fmt.Errorf("%s must be a valid channel.", arg.Name)
 	}
 
 	sf, err := discord.ParseSnowflake(m[1])
@@ -154,5 +188,5 @@ func validateChannelMention(ctx *Context, arg *Argument, argValue string) error 
 	}
 
 	// Channel does not exist, or is not in this guild.
-	return errors.New(arg.Name + " must be a channel.")
+	return fmt.Errorf("%s must be a valid channel.", arg.Name)
 }
