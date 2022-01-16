@@ -5,7 +5,7 @@ import "testing"
 func TestParseSignature(t *testing.T) {
 	r := New()
 
-	parseSignature(r, "test <stringarg> <:emojiarg> <@mentionarg> <#channelarg> <intarg int> <floatarg float> <boolarg bool> [optional]")
+	parseSignature(r, "test <stringarg> <:emojiarg> <@mentionarg> <#channelarg> <intarg int min:1> [optional val int min:1] <floatarg float> <boolarg bool> [optional]")
 
 	if r.ArgumentCount < 8 {
 		t.Fatal("Expected 8 arguments")
@@ -35,11 +35,25 @@ func TestParseSignature(t *testing.T) {
 		t.Fatal("Expected intarg to be type int")
 	}
 
+	if optionalIntArg, exists := r.Arguments["optional val"]; !exists || optionalIntArg.Type != ArgumentTypeInt {
+		t.Fatal("Expected optional val to be type int")
+	}
+
 	if floatArg, exists := r.Arguments["floatarg"]; !exists || floatArg.Type != ArgumentTypeFloat {
 		t.Fatal("Expected floatarg to be type float")
 	}
 
 	if boolArg, exists := r.Arguments["boolarg"]; !exists || boolArg.Type != ArgumentTypeBool {
 		t.Fatal("Expected boolarg to be type bool")
+	}
+}
+
+func TestSomething(t *testing.T) {
+	r := New()
+
+	parseSignature(r, "track <type> <channel> [#discord channel] [message]")
+
+	for argName, arg := range r.Arguments {
+		t.Log("Argument", argName, "->", arg.Name, "type", arg.Type)
 	}
 }

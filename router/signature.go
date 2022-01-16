@@ -120,6 +120,8 @@ func parseSignature(r *Route, signature string) *Route {
 							}
 						}
 
+						arg.Name = name
+
 						r.Arguments[name] = arg
 
 						index++
