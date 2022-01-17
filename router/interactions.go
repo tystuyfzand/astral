@@ -80,8 +80,15 @@ func RegisterCommands(r *Route, s *state.State, appID discord.AppID) ([]*discord
 func RegisterGuildCommands(r *Route, s *state.State, appID discord.AppID, guildID discord.GuildID) ([]*discord.Command, error) {
 	commands := make([]*discord.Command, 0)
 
-	// Pull existing commands
-	existing, err := s.GuildCommands(appID, guildID)
+	var existing []discord.Command
+	var err error
+
+	if guildID.IsValid() {
+		// Pull existing commands
+		existing, err = s.GuildCommands(appID, guildID)
+	} else {
+		existing, err = s.Commands(appID)
+	}
 
 	if err != nil {
 		return nil, err
