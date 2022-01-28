@@ -29,6 +29,16 @@ func testInteractionData2() []discord.CommandInteractionOption {
 	}
 }
 
+func TestInteractionOptionValue(t *testing.T) {
+	val := "\"value\""
+
+	if val[0] == '"' && val[len(val)-1] == '"' {
+		val = val[1 : len(val)-1]
+	}
+
+	t.Log(val)
+}
+
 func TestOptions(t *testing.T) {
 	path := []string{"test", "something", "cool"}
 

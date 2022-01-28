@@ -111,6 +111,10 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 					val = discord.ChannelID(v).Mention()
 				default:
 					val = opt.Value.String()
+
+					if val[0] == '"' && val[len(val)-1] == '"' {
+						val = val[1 : len(val)-1]
+					}
 				}
 
 				args[arg.Index] = val
