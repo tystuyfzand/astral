@@ -15,6 +15,17 @@ var (
 	emojiRegexp     = regexp.MustCompile("<(a?):(.+?):(\\d+)>")
 )
 
+// InvalidValueError is an error type thrown when a value is invalid/unknown
+type InvalidValueError struct {
+	Argument string
+	Value    string
+}
+
+// Error constructs a string for the error with the argument and value
+func (i InvalidValueError) Error() string {
+	return "unknown argument value for " + i.Argument + ": " + i.Value
+}
+
 // Validate checks the context against the Route's defined arguments and ensures all required arguments
 // and types are satisfied.
 func (r *Route) Validate(ctx *Context) error {
@@ -71,7 +82,7 @@ func (r *Route) Validate(ctx *Context) error {
 			}
 
 			if !found {
-				return ErrInvalidValue
+				return InvalidValueError{Argument: arg.Name, Value: argValue}
 			}
 		}
 	}

@@ -23,3 +23,21 @@ func TestRoute_Path(t *testing.T) {
 		t.Fatal("Expected element 2 to be deeper")
 	}
 }
+
+func TestRoute_Validate(t *testing.T) {
+	parent := New()
+
+	parent = parent.On("content", nil)
+
+	r := parent.On("track <type> <name>", nil)
+	r.Arguments["type"].Choices = []StringChoice{
+		{Name: "Twitch", Value: "twitch"},
+	}
+
+	if err := r.Validate(&Context{
+		ArgumentCount: 2,
+		Arguments:     []string{"twitch", "test"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+}
