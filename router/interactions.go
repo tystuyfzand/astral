@@ -6,7 +6,6 @@ import (
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/diamondburned/arikawa/v3/utils/httputil"
-	"log"
 	"regexp"
 	"strings"
 )
@@ -98,8 +97,6 @@ func RegisterGuildCommands(r *Route, s *state.State, appID discord.AppID, guildI
 
 	for _, cmd := range existing {
 		existingMap[cmd.Name] = cmd
-
-		log.Println("Found exiting command", cmd.Name)
 	}
 
 	for _, sub := range r.routes {
