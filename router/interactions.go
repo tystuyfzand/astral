@@ -75,8 +75,6 @@ func RegisterCommands(r *Route, s *state.State, appID discord.AppID) ([]discord.
 
 // RegisterGuildCommands registers all sub routes as interaction/slash commands to a guild
 func RegisterGuildCommands(r *Route, s *state.State, appID discord.AppID, guildID discord.GuildID) ([]discord.Command, error) {
-	commands := make([]discord.Command, 0)
-
 	var existing []discord.Command
 	var err error
 
@@ -97,6 +95,8 @@ func RegisterGuildCommands(r *Route, s *state.State, appID discord.AppID, guildI
 		existingMap[cmd.Name] = cmd
 	}
 
+	commands := make([]api.CreateCommandData, 0)
+
 	for _, sub := range r.routes {
 		if !sub.export {
 			continue
@@ -107,32 +107,14 @@ func RegisterGuildCommands(r *Route, s *state.State, appID discord.AppID, guildI
 		if err != nil {
 			return nil, err
 		}
-
-		var command *discord.Command
-
-		if cmd, exists := existingMap[sub.Name]; exists {
-			cmd.Name = data.Name
-			cmd.Description = data.Description
-			cmd.Options = data.Options
-			command = &cmd
-		} else {
-			command = &discord.Command{
-				Name:        data.Name,
-				Description: data.Description,
-				Options:     data.Options,
-			}
-		}
-
-		commands = append(commands, *command)
+		commands = append(commands, data)
 	}
 
 	if guildID.IsValid() {
-		commands, err = s.BulkOverwriteGuildCommands(appID, guildID, commands)
-	} else {
-		commands, err = s.BulkOverwriteCommands(appID, commands)
+		return s.BulkOverwriteGuildCommands(appID, guildID, commands)
 	}
 
-	return commands, err
+	return s.BulkOverwriteCommands(appID, commands)
 }
 
 func (r *Route) toCommandData() (api.CreateCommandData, error) {
