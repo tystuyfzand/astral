@@ -75,26 +75,6 @@ func RegisterCommands(r *Route, s *state.State, appID discord.AppID) ([]discord.
 
 // RegisterGuildCommands registers all sub routes as interaction/slash commands to a guild
 func RegisterGuildCommands(r *Route, s *state.State, appID discord.AppID, guildID discord.GuildID) ([]discord.Command, error) {
-	var existing []discord.Command
-	var err error
-
-	if guildID.IsValid() {
-		// Pull existing commands
-		existing, err = s.GuildCommands(appID, guildID)
-	} else {
-		existing, err = s.Commands(appID)
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	existingMap := make(map[string]discord.Command)
-
-	for _, cmd := range existing {
-		existingMap[cmd.Name] = cmd
-	}
-
 	commands := make([]api.CreateCommandData, 0)
 
 	for _, sub := range r.routes {
@@ -107,6 +87,7 @@ func RegisterGuildCommands(r *Route, s *state.State, appID discord.AppID, guildI
 		if err != nil {
 			return nil, err
 		}
+
 		commands = append(commands, data)
 	}
 
