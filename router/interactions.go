@@ -7,6 +7,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/diamondburned/arikawa/v3/utils/httputil"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -56,6 +57,15 @@ type argDescriptionError struct {
 
 func (e argDescriptionError) Error() string {
 	return "invalid argument description for " + strings.Join(e.route.Path(), "->") + " arg " + e.arg.Name + ": " + e.arg.Description
+}
+
+type argTypeError struct {
+	route *Route
+	arg   *Argument
+}
+
+func (e argTypeError) Error() string {
+	return "invalid argument type for " + strings.Join(e.route.Path(), "->") + " arg " + e.arg.Name + ": " + strconv.Itoa(int(e.arg.Type))
 }
 
 // RegisterCommands registers all sub routes as interaction/slash commands
@@ -266,6 +276,8 @@ func argsFromRoute(r *Route) ([]discord.CommandOption, error) {
 			}
 
 			options[arg.Index] = opt
+		default:
+			return nil, argTypeError{route: r, arg: arg}
 		}
 	}
 
