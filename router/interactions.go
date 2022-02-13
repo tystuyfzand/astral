@@ -226,6 +226,8 @@ func argsFromRoute(r *Route) ([]discord.CommandOption, error) {
 				Required:    arg.Required,
 				Description: arg.Description,
 			}
+		case ArgumentTypeEmoji:
+			fallthrough
 		case ArgumentTypeBasic:
 			opt := &discord.StringOption{
 				OptionName:  argName,
