@@ -87,7 +87,11 @@ func (r *Route) FindAutocomplete(parentRoute string, options []discord.Autocompl
 
 func recurseAutocompleteOptions(options []discord.AutocompleteOption) (string, []discord.AutocompleteOption, bool) {
 	for _, option := range options {
-		foundFocused := false
+		if option.Type == discord.SubcommandOptionType {
+			return option.Name, option.Options, false
+		}
+
+		foundFocused := option.Focused
 
 		if option.Options != nil {
 			for _, opt := range option.Options {
@@ -99,7 +103,7 @@ func recurseAutocompleteOptions(options []discord.AutocompleteOption) (string, [
 		}
 
 		if foundFocused {
-			return option.Name, option.Options, foundFocused
+			return "", options, option.Focused
 		}
 	}
 

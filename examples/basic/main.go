@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
@@ -54,8 +55,6 @@ func main() {
 
 	// Test for registering commands with arguments
 	route.Group(func(r *router.Route) {
-		r.Export(true)
-
 		r.On("testing <type> <channel> [#discord channel] [message]", func(ctx *router.Context) {
 			ctx.Replyf("Arg1: %s, Arg2: %s", ctx.Arg("type"), ctx.Arg("channel"))
 		}).Desc("Testing command")
@@ -88,9 +87,15 @@ func main() {
 		}).Alias("alias")
 	})
 
+	route.On("nesting", nil).On("level1 <test>", func(ctx *router.Context) {
+		ctx.Reply("Argument: " + ctx.Arg("test"))
+	})
+
 	// Test for autocomplete
 	route.On("autocomplete <test>", func(ctx *router.Context) {
 		ctx.Reply("You chose: " + ctx.Arg("test"))
+	}).Argument("test", func(arg *router.Argument) {
+		arg.Description = "Test Arg"
 	}).Autocomplete("test", func(ctx *router.Context, option discord.AutocompleteOption) []router.StringChoice {
 		choices := []router.StringChoice{
 			{Name: "Test", Value: "test"},
@@ -104,7 +109,7 @@ func main() {
 		}
 
 		return choices
-	})
+	}).Export(true).Desc("Autocomplete test")
 
 	err := s.Open(context.Background())
 
@@ -115,11 +120,15 @@ func main() {
 	log.Println("Ready.")
 
 	if *flagGuildID != 0 {
-		_, err := router.RegisterGuildCommands(route, s, discord.AppID(*flagAppID), discord.GuildID(*flagGuildID))
+		log.Println("Registering guild commands")
+
+		cmds, err := router.RegisterGuildCommands(route, s, discord.AppID(*flagAppID), discord.GuildID(*flagGuildID))
 
 		if err != nil {
 			log.Fatalln(err)
 		}
+
+		log.Println("Done. Commands:", len(cmds))
 	}
 
 	interrupt := make(chan os.Signal, 1)
@@ -160,9 +169,14 @@ func messageCreateHandler(s *state.State) func(evt *gateway.MessageCreateEvent) 
 			argString = strings.TrimSpace(str[idx+1:])
 		}
 
+		level := len(match.Path())
+
+		var command string
+
 		if len(args) > 1 {
-			_, args = args[0], args[1:]
+			command, args = strings.Join(args[:level], " "), args[level:]
 		} else {
+			command = str
 			args = []string{}
 		}
 
@@ -173,6 +187,8 @@ func messageCreateHandler(s *state.State) func(evt *gateway.MessageCreateEvent) 
 			return
 		}
 
+		ctx.Command = command
+
 		go match.Call(ctx)
 	}
 }
@@ -181,6 +197,9 @@ func interactionHandler(s *state.State) func(evt *gateway.InteractionCreateEvent
 	return func(evt *gateway.InteractionCreateEvent) {
 		switch data := evt.Data.(type) {
 		case *discord.CommandInteraction:
+			b, _ := json.MarshalIndent(data, "", "\t")
+
+			log.Println(string(b))
 			// Find root command
 			match := route.FindInteraction(data.Name, data.Options)
 
