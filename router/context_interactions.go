@@ -49,6 +49,63 @@ func recurseOptions(options []discord.CommandInteractionOption) (string, []disco
 	return "", nil
 }
 
+// FindAutocomplete finds a route path from an autocomplete interaction
+func (r *Route) FindAutocomplete(parentRoute string, options []discord.AutocompleteOption) (*Route, []discord.AutocompleteOption) {
+	if len(r.routes) < 1 {
+		return r, nil
+	}
+
+	opts := options
+
+	currentRoute := r.routes[parentRoute]
+
+	if currentRoute == nil {
+		return nil, nil
+	}
+
+	var routeName string
+	var focused bool
+
+	for opts != nil {
+		routeName, opts, focused = recurseAutocompleteOptions(opts)
+
+		if routeName != "" {
+			if newRoute, exists := currentRoute.routes[routeName]; exists {
+				currentRoute = newRoute
+			} else {
+				break
+			}
+		}
+
+		if focused {
+			break
+		}
+	}
+
+	return currentRoute, opts
+}
+
+func recurseAutocompleteOptions(options []discord.AutocompleteOption) (string, []discord.AutocompleteOption, bool) {
+	for _, option := range options {
+		foundFocused := false
+
+		if option.Options != nil {
+			for _, opt := range option.Options {
+				if opt.Focused {
+					foundFocused = true
+					break
+				}
+			}
+		}
+
+		if foundFocused {
+			return option.Name, option.Options, foundFocused
+		}
+	}
+
+	return "", nil, false
+}
+
 // ContextFromInteraction creates a new Context from an interaction event
 func ContextFromInteraction(state *state.State, event *gateway.InteractionCreateEvent, r *Route) (*Context, error) {
 	// Find the guild for that channel. This uses State if enabled.
@@ -66,11 +123,8 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 
 	args := make([]string, r.ArgumentCount)
 
-	event.Data.InteractionType()
-	switch event.Data.InteractionType() {
-	case discord.CommandInteractionType:
-		data := event.Data.(*discord.CommandInteraction)
-
+	switch data := event.Data.(type) {
+	case *discord.CommandInteraction:
 		path := r.Path()
 		path = path[1:]
 
@@ -122,6 +176,7 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 				break
 			}
 		}
+	case *discord.AutocompleteInteraction:
 	}
 
 	ctx := &Context{

@@ -55,19 +55,7 @@ type argDescriptionError struct {
 }
 
 func (e argDescriptionError) Error() string {
-	var path []string
-
-	parent := e.route.parent
-
-	for parent != nil {
-		if parent.Name != "" {
-			path = append([]string{parent.Name}, path...)
-		}
-
-		parent = parent.parent
-	}
-
-	return "invalid argument description for " + strings.Join(path, "->") + " arg " + e.arg.Name + ": " + e.arg.Description
+	return "invalid argument description for " + strings.Join(e.route.Path(), "->") + " arg " + e.arg.Name + ": " + e.arg.Description
 }
 
 // RegisterCommands registers all sub routes as interaction/slash commands
@@ -267,6 +255,10 @@ func argsFromRoute(r *Route) ([]discord.CommandOption, error) {
 				OptionName:  argName,
 				Required:    arg.Required,
 				Description: arg.Description,
+			}
+
+			if arg.autocomplete != nil {
+				opt.Autocomplete = true
 			}
 
 			if len(arg.Choices) > 0 {

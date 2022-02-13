@@ -88,6 +88,24 @@ func main() {
 		}).Alias("alias")
 	})
 
+	// Test for autocomplete
+	route.On("autocomplete <test>", func(ctx *router.Context) {
+		ctx.Reply("You chose: " + ctx.Arg("test"))
+	}).Autocomplete("test", func(ctx *router.Context, option discord.AutocompleteOption) []router.StringChoice {
+		choices := []router.StringChoice{
+			{Name: "Test", Value: "test"},
+		}
+
+		if option.Value != "" {
+			choices = append(choices, router.StringChoice{
+				Name:  option.Value,
+				Value: option.Value,
+			})
+		}
+
+		return choices
+	})
+
 	err := s.Open(context.Background())
 
 	if err != nil {
@@ -161,27 +179,47 @@ func messageCreateHandler(s *state.State) func(evt *gateway.MessageCreateEvent) 
 
 func interactionHandler(s *state.State) func(evt *gateway.InteractionCreateEvent) {
 	return func(evt *gateway.InteractionCreateEvent) {
-		data, ok := evt.Data.(*discord.CommandInteraction)
+		switch data := evt.Data.(type) {
+		case *discord.CommandInteraction:
+			// Find root command
+			match := route.FindInteraction(data.Name, data.Options)
 
-		if !ok {
-			return
+			if match == nil {
+				log.Println("No match for command args")
+				return
+			}
+
+			ctx, err := router.ContextFromInteraction(s, evt, match)
+
+			if err != nil {
+				log.Println("Unable to create context:", err)
+				return
+			}
+
+			go match.Call(ctx)
+		case *discord.AutocompleteInteraction:
+			// Find root command
+			match, opts := route.FindAutocomplete(data.Name, data.Options)
+
+			if match == nil {
+				log.Println("No match for command args")
+				return
+			}
+
+			ctx, err := router.ContextFromInteraction(s, evt, match)
+
+			if err != nil {
+				log.Println("Unable to create context:", err)
+				return
+			}
+
+			log.Println("Calling autocomplete")
+
+			err = match.CallAutocomplete(ctx, opts)
+
+			if err != nil {
+				log.Println("Error calling:", err)
+			}
 		}
-
-		// Find root command
-		match := route.FindInteraction(data.Name, data.Options)
-
-		if match == nil {
-			log.Println("No match for command args")
-			return
-		}
-
-		ctx, err := router.ContextFromInteraction(s, evt, match)
-
-		if err != nil {
-			log.Println("Unable to create context:", err)
-			return
-		}
-
-		go match.Call(ctx)
 	}
 }

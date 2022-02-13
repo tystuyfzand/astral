@@ -24,7 +24,7 @@ func (m *MessageResponder) Usage(usage ...string) (*discord.Message, error) {
 		usage = []string{m.ctx.route.Usage}
 	}
 
-	usage[0] = strings.Replace(usage[0], "{command}", m.ctx.route.Name, -1)
+	usage[0] = strings.Replace(usage[0], "{command}", strings.Join(m.ctx.route.Path(), " "), -1)
 
 	return m.Reply(usage[0])
 }

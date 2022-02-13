@@ -1,6 +1,9 @@
 package router
 
 import (
+	"errors"
+	"github.com/diamondburned/arikawa/v3/api"
+	"github.com/diamondburned/arikawa/v3/discord"
 	"regexp"
 	"strings"
 )
@@ -10,6 +13,7 @@ var (
 	channelMentionRegexp = regexp.MustCompile("<#(\\d+)>")
 )
 
+// Handler is a command handler.
 type Handler func(*Context)
 
 // FindOpts represents options for FindComplex. Default is just Args in Find.
@@ -62,6 +66,28 @@ func (r *Route) Path() []string {
 	}
 
 	return path
+}
+
+// Argument is a quick helper that lets you pull a route's argument into a func and modify it.
+func (r *Route) Argument(name string, f func(*Argument)) *Route {
+	if arg, ok := r.Arguments[name]; ok {
+		f(arg)
+	} else {
+		panic("Unable to find argument " + name)
+	}
+
+	return r
+}
+
+// Autocomplete is a helper func to pass through autocomplete functions into options
+func (r *Route) Autocomplete(name string, f AutocompleteHandler) *Route {
+	if arg, ok := r.Arguments[name]; ok {
+		arg.autocomplete = f
+	} else {
+		panic("Unable to find argument " + name)
+	}
+
+	return r
 }
 
 // Add adds a sub route to this route.
@@ -201,6 +227,62 @@ func (r *Route) Call(ctx *Context) error {
 	}
 
 	handler(ctx)
+
+	return nil
+}
+
+var (
+	ErrUnknownOption   = errors.New("unknown option")
+	ErrNotAutocomplete = errors.New("option is not registered to autocomplete")
+)
+
+// CallAutocomplete calls the autocomplete handler for a route's argument
+func (r *Route) CallAutocomplete(ctx *Context, options []discord.AutocompleteOption) error {
+	opt := focusedOption(options)
+
+	if opt == nil {
+		return ErrUnknownOption
+	}
+
+	arg, exists := r.Arguments[opt.Name]
+
+	if !exists {
+		return ErrUnknownOption
+	}
+
+	if arg.autocomplete == nil {
+		return ErrNotAutocomplete
+	}
+
+	ret := arg.autocomplete(ctx, *opt)
+
+	if ret != nil {
+		choices := make([]api.AutocompleteChoice, len(ret))
+
+		for i, choice := range ret {
+			choices[i] = api.AutocompleteChoice{
+				Name:  choice.Name,
+				Value: choice.Value,
+			}
+		}
+
+		return ctx.Session.RespondInteraction(ctx.Interaction.ID, ctx.Interaction.Token, api.InteractionResponse{
+			Type: api.AutocompleteResult,
+			Data: &api.InteractionResponseData{
+				Choices: &choices,
+			},
+		})
+	}
+
+	return nil
+}
+
+func focusedOption(options []discord.AutocompleteOption) *discord.AutocompleteOption {
+	for _, opt := range options {
+		if opt.Focused {
+			return &opt
+		}
+	}
 
 	return nil
 }

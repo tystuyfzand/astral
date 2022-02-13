@@ -5,6 +5,14 @@ import (
 	"strconv"
 )
 
+type AutocompleteChoice struct {
+	Name  string
+	Value string
+}
+
+// AutocompleteHandler is a handler for autocomplete events.
+type AutocompleteHandler func(*Context, discord.AutocompleteOption) []StringChoice
+
 // StringChoice is a basic wrapper for name/value choices
 type StringChoice struct {
 	Name  string
@@ -13,14 +21,21 @@ type StringChoice struct {
 
 // Argument type contains defined arguments, parsed from the command signature
 type Argument struct {
-	Index       int
-	Name        string
-	Description string
-	Required    bool
-	Type        ArgumentType
-	Choices     []StringChoice
-	Min         interface{}
-	Max         interface{}
+	autocomplete AutocompleteHandler
+	Index        int
+	Name         string
+	Description  string
+	Required     bool
+	Type         ArgumentType
+	Choices      []StringChoice
+	Min          interface{}
+	Max          interface{}
+}
+
+// Autocomplete registers an autocomplete handler for this argument
+func (a *Argument) Autocomplete(f AutocompleteHandler) *Argument {
+	a.autocomplete = f
+	return a
 }
 
 func (a *Argument) integerChoices() []discord.IntegerChoice {
