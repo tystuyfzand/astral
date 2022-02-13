@@ -35,19 +35,7 @@ type commandDescriptionError struct {
 }
 
 func (e commandDescriptionError) Error() string {
-	var path []string
-
-	parent := e.route.parent
-
-	for parent != nil {
-		if parent.Name != "" {
-			path = append([]string{parent.Name}, path...)
-		}
-
-		parent = parent.parent
-	}
-
-	return "invalid command description for " + strings.Join(path, "->") + ": " + e.route.Description
+	return "invalid command description for " + strings.Join(e.route.Path(), "->") + ": " + e.route.Description
 }
 
 type argDescriptionError struct {
