@@ -191,6 +191,10 @@ func argsFromRoute(r *Route) ([]discord.CommandOption, error) {
 				Description: arg.Description,
 			}
 
+			if arg.autocomplete != nil {
+				opt.Autocomplete = true
+			}
+
 			if len(arg.Choices) > 0 {
 				opt.Choices = arg.integerChoices()
 			}
@@ -201,6 +205,10 @@ func argsFromRoute(r *Route) ([]discord.CommandOption, error) {
 				OptionName:  argName,
 				Required:    arg.Required,
 				Description: arg.Description,
+			}
+
+			if arg.autocomplete != nil {
+				opt.Autocomplete = true
 			}
 
 			if len(arg.Choices) > 0 {
