@@ -41,7 +41,7 @@ func (r *Route) FindInteraction(parentRoute string, options []discord.CommandInt
 
 func recurseOptions(options []discord.CommandInteractionOption) (string, []discord.CommandInteractionOption) {
 	for _, option := range options {
-		if option.Value == nil {
+		if option.Type == discord.SubcommandOptionType || option.Type == discord.SubcommandGroupOptionType {
 			return option.Name, option.Options
 		}
 	}
