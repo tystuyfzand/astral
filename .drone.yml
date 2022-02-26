@@ -14,7 +14,7 @@ steps:
       - go version
       - echo "Installing ginkgo and application dependencies"
       - apk --no-cache add git gcc musl-dev
-      - go get github.com/onsi/ginkgo/v2
+      - go get github.com/onsi/ginkgo/v2/ginkgo
       - go install github.com/onsi/ginkgo/v2/ginkgo
       - echo "Running tests"
       - ginkgo
