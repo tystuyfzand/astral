@@ -1,49 +1,197 @@
 package astral
 
-import "testing"
+import (
+	"github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+)
 
-func TestParseSignature(t *testing.T) {
-	r := New()
+var _ = ginkgo.Describe("Signatures", func() {
+	var (
+		r *Route
+	)
+	ginkgo.BeforeEach(func() {
+		r = New()
+	})
+	ginkgo.Context("Arguments", func() {
+		ginkgo.Context("Strings", func() {
+			ginkgo.It("Should properly parse string arguments", func() {
+				parseSignature(r, "test <arg>")
 
-	parseSignature(r, "test <string arg> <:emoji arg> <@mention arg> <#channel arg> <intarg int min:1> [optional val int min:1] <floatarg float> <boolarg bool> [optional]")
+				arg := r.Arguments["arg"]
 
-	if r.ArgumentCount < 8 {
-		t.Fatal("Expected 8 arguments")
-	}
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeTrue())
+				Expect(arg.Type).To(Equal(ArgumentTypeBasic))
+			})
+			ginkgo.It("Should properly parse optional string arguments", func() {
+				parseSignature(r, "test [arg]")
 
-	if optional, exists := r.Arguments["optional"]; !exists || optional.Required {
-		t.Fatal("Expected optional argument to not be required")
-	}
+				arg := r.Arguments["arg"]
 
-	if basic, exists := r.Arguments["string arg"]; !exists || basic.Type != ArgumentTypeBasic {
-		t.Fatal("Expected string arg to be type Basic")
-	}
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeFalse())
+				Expect(arg.Type).To(Equal(ArgumentTypeBasic))
+			})
+		})
+		ginkgo.Context("Emojis", func() {
+			ginkgo.It("Should properly parse emoji arguments", func() {
+				parseSignature(r, "test <:emoji>")
 
-	if emoji, exists := r.Arguments["emoji arg"]; !exists || emoji.Type != ArgumentTypeEmoji {
-		t.Fatal("Expected emoji arg to be type Emoji")
-	}
+				arg := r.Arguments["emoji"]
 
-	if mention, exists := r.Arguments["mention arg"]; !exists || mention.Type != ArgumentTypeUserMention {
-		t.Fatal("Expected mention arg to be type UserMention")
-	}
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeTrue())
+				Expect(arg.Type).To(Equal(ArgumentTypeEmoji))
+			})
+			ginkgo.It("Should properly parse optional emoji arguments", func() {
+				parseSignature(r, "test [:emoji]")
 
-	if channel, exists := r.Arguments["channel arg"]; !exists || channel.Type != ArgumentTypeChannelMention {
-		t.Fatal("Expected channel arg to be type Channel")
-	}
+				arg := r.Arguments["emoji"]
 
-	if intArg, exists := r.Arguments["intarg"]; !exists || intArg.Type != ArgumentTypeInt {
-		t.Fatal("Expected intarg to be type int")
-	}
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeFalse())
+				Expect(arg.Type).To(Equal(ArgumentTypeEmoji))
+			})
+		})
+		ginkgo.Context("Users", func() {
+			ginkgo.It("Should properly parse required mention arguments", func() {
+				parseSignature(r, "test <@mention>")
 
-	if optionalIntArg, exists := r.Arguments["optional val"]; !exists || optionalIntArg.Type != ArgumentTypeInt {
-		t.Fatal("Expected optional val to be type int")
-	}
+				arg := r.Arguments["mention"]
 
-	if floatArg, exists := r.Arguments["floatarg"]; !exists || floatArg.Type != ArgumentTypeFloat {
-		t.Fatal("Expected floatarg to be type float")
-	}
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeTrue())
+				Expect(arg.Type).To(Equal(ArgumentTypeUserMention))
+			})
+			ginkgo.It("Should properly parse optional mention arguments", func() {
+				parseSignature(r, "test [@mention]")
 
-	if boolArg, exists := r.Arguments["boolarg"]; !exists || boolArg.Type != ArgumentTypeBool {
-		t.Fatal("Expected boolarg to be type bool")
-	}
-}
+				arg := r.Arguments["mention"]
+
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeFalse())
+				Expect(arg.Type).To(Equal(ArgumentTypeUserMention))
+			})
+		})
+		ginkgo.Context("Channels", func() {
+			ginkgo.It("Should properly parse channel arguments", func() {
+				parseSignature(r, "test <#channel>")
+
+				arg := r.Arguments["channel"]
+
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeTrue())
+				Expect(arg.Type).To(Equal(ArgumentTypeChannelMention))
+			})
+			ginkgo.It("Should properly parse optional channel arguments", func() {
+				parseSignature(r, "test [#channel]")
+
+				arg := r.Arguments["channel"]
+
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeFalse())
+				Expect(arg.Type).To(Equal(ArgumentTypeChannelMention))
+			})
+		})
+		ginkgo.Context("Ints", func() {
+			ginkgo.It("Should properly parse int arguments", func() {
+				parseSignature(r, "test <arg int>")
+
+				arg := r.Arguments["arg"]
+
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeTrue())
+				Expect(arg.Type).To(Equal(ArgumentTypeInt))
+			})
+			ginkgo.It("Should properly parse optional int arguments", func() {
+				parseSignature(r, "test [arg int]")
+
+				arg := r.Arguments["arg"]
+
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeFalse())
+				Expect(arg.Type).To(Equal(ArgumentTypeInt))
+			})
+			ginkgo.It("Should properly parse int arguments with minimums", func() {
+				parseSignature(r, "test <arg int min:2>")
+
+				arg := r.Arguments["arg"]
+
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeTrue())
+				Expect(arg.Type).To(Equal(ArgumentTypeInt))
+				Expect(arg.Min).To(BeEquivalentTo(2))
+			})
+			ginkgo.It("Should properly parse optional int arguments with minimums", func() {
+				parseSignature(r, "test [arg int min:3]")
+
+				arg := r.Arguments["arg"]
+
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeFalse())
+				Expect(arg.Type).To(Equal(ArgumentTypeInt))
+				Expect(arg.Min).To(BeEquivalentTo(3))
+			})
+		})
+		ginkgo.Context("Floats", func() {
+			ginkgo.It("Should properly parse float arguments", func() {
+				parseSignature(r, "test <arg float>")
+
+				arg := r.Arguments["arg"]
+
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeTrue())
+				Expect(arg.Type).To(Equal(ArgumentTypeFloat))
+			})
+			ginkgo.It("Should properly parse optional float arguments", func() {
+				parseSignature(r, "test [arg float]")
+
+				arg := r.Arguments["arg"]
+
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeFalse())
+				Expect(arg.Type).To(Equal(ArgumentTypeFloat))
+			})
+			ginkgo.It("Should properly parse float arguments with minimums", func() {
+				parseSignature(r, "test <arg float min:2>")
+
+				arg := r.Arguments["arg"]
+
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeTrue())
+				Expect(arg.Type).To(Equal(ArgumentTypeFloat))
+				Expect(arg.Min).To(BeEquivalentTo(2))
+			})
+			ginkgo.It("Should properly parse optional float arguments with minimums", func() {
+				parseSignature(r, "test [arg float min:3]")
+
+				arg := r.Arguments["arg"]
+
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeFalse())
+				Expect(arg.Type).To(Equal(ArgumentTypeFloat))
+				Expect(arg.Min).To(BeEquivalentTo(3))
+			})
+		})
+		ginkgo.Context("Booleans", func() {
+			ginkgo.It("Should properly parse bool arguments", func() {
+				parseSignature(r, "test <arg bool>")
+
+				arg := r.Arguments["arg"]
+
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeTrue())
+				Expect(arg.Type).To(Equal(ArgumentTypeBool))
+			})
+			ginkgo.It("Should properly parse optional bool arguments", func() {
+				parseSignature(r, "test [arg bool]")
+
+				arg := r.Arguments["arg"]
+
+				Expect(arg).ToNot(BeNil())
+				Expect(arg.Required).To(BeFalse())
+				Expect(arg.Type).To(Equal(ArgumentTypeBool))
+			})
+		})
+	})
+})

@@ -48,7 +48,7 @@ type convertedArg struct {
 }
 
 // ContextFrom creates a new MessageContext from the session and event
-func ContextFrom(state *state.State, event *gateway.MessageCreateEvent, r *Route, args []string, argString string) (*Context, error) {
+func ContextFrom(state *state.State, event *gateway.MessageCreateEvent, r *Route, args []string) (*Context, error) {
 	// Find the channel for the event, which doesn't have a built-in discordgo equivalent of .Guild()
 	c, err := state.Channel(event.ChannelID)
 

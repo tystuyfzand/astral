@@ -2,6 +2,8 @@ package astral
 
 import (
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 	"testing"
 )
 
@@ -25,48 +27,36 @@ func testInteractionData2() []discord.CommandInteractionOption {
 	return []discord.CommandInteractionOption{
 		{
 			Name: "something",
+			Type: discord.SubcommandOptionType,
 		},
 	}
 }
 
-func TestInteractionOptionValue(t *testing.T) {
-	val := "\"value\""
+var _ = ginkgo.Describe("Context Interactions", func() {
+	ginkgo.Context("Options", func() {
+		ginkgo.It("Should retrieve options from an option slice", func() {
+			path := []string{"test", "something", "cool"}
 
-	if val[0] == '"' && val[len(val)-1] == '"' {
-		val = val[1 : len(val)-1]
-	}
+			opts := optionsFromPath(path[1:], testInteractionData())
 
-	t.Log(val)
-}
+			Expect(opts).ToNot(BeNil())
+		})
+	})
+	ginkgo.Context("Routes", func() {
+		ginkgo.It("Should retrieve the proper path from an interaction", func() {
+			r := New()
 
-func TestOptions(t *testing.T) {
-	path := []string{"test", "something", "cool"}
+			r.On("test", nil).On("something", nil)
 
-	opts := optionsFromPath(path[1:], testInteractionData())
+			route := r.FindInteraction("test", testInteractionData2())
 
-	if opts == nil {
-		t.Fatal("Expected options to not be nil")
-	}
+			path := route.Path()
 
-	t.Log(opts)
-}
-
-func TestRoutePath(t *testing.T) {
-	r := New()
-
-	r.On("test", nil).On("something", nil)
-
-	route := r.FindInteraction("test", testInteractionData2())
-
-	path := route.Path()
-
-	if len(path) < 2 || path[0] != "test" && path[1] != "something" {
-		t.Fatal("Expected path to be something, cool - got:", path)
-	}
-
-	t.Log(route.Name)
-	t.Log(path)
-}
+			Expect(path).To(Equal([]string{"test", "something"}))
+			Expect(route.Name).To(Equal("something"))
+		})
+	})
+})
 
 func TestAutocomplete(t *testing.T) {
 	data := discord.AutocompleteInteraction{

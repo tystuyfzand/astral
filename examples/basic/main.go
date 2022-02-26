@@ -159,16 +159,6 @@ func messageCreateHandler(s *state.State) func(evt *gateway.MessageCreateEvent) 
 			return
 		}
 
-		idx := strings.Index(str, " ")
-
-		var argString string
-
-		if idx == -1 {
-			argString = ""
-		} else {
-			argString = strings.TrimSpace(str[idx+1:])
-		}
-
 		level := len(match.Path())
 
 		var command string
@@ -180,7 +170,7 @@ func messageCreateHandler(s *state.State) func(evt *gateway.MessageCreateEvent) 
 			args = []string{}
 		}
 
-		ctx, err := astral.ContextFrom(s, evt, match, args, argString)
+		ctx, err := astral.ContextFrom(s, evt, match, args)
 
 		if err != nil {
 			log.Println("Unable to create context:", err)
