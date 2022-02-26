@@ -3,8 +3,8 @@ package cooldown
 import (
 	"github.com/diamondburned/timedmap"
 	"golang.org/x/time/rate"
+	"meow.tf/astral"
 	"meow.tf/astral/middleware"
-	"meow.tf/astral/router"
 	"strings"
 	"time"
 )
@@ -29,6 +29,7 @@ func init() {
 	cl.Start()
 }
 
+// Handler is a type which wraps the specific functionality of the rate limiter
 type Handler struct {
 	m         *timedmap.Map
 	limit     int
@@ -37,8 +38,8 @@ type Handler struct {
 	catch     middleware.CatchFunc
 }
 
-// Finds or creates a new limiter for the specified ctx
-func (h *Handler) limiterOrNew(ctx *router.Context) *rate.Limiter {
+// limitorOrNew Finds or creates a new limiter for the specified ctx
+func (h *Handler) limiterOrNew(ctx *astral.Context) *rate.Limiter {
 	key := limiterKey(ctx, h.flags)
 
 	var limiter *rate.Limiter
@@ -59,8 +60,8 @@ func (h *Handler) limiterOrNew(ctx *router.Context) *rate.Limiter {
 }
 
 // Middleware function for the handler
-func (h *Handler) Middleware(fn router.Handler) router.Handler {
-	return func(ctx *router.Context) {
+func (h *Handler) Middleware(fn astral.Handler) astral.Handler {
+	return func(ctx *astral.Context) {
 		limiter := h.limiterOrNew(ctx)
 
 		if !limiter.Allow() {
@@ -74,13 +75,13 @@ func (h *Handler) Middleware(fn router.Handler) router.Handler {
 	}
 }
 
-// Create a new limiter which does nothing when the limit is hit
-func New(limit int, timeFrame time.Duration, flags int) router.MiddlewareFunc {
+// New Create a new limiter which does nothing when the limit is hit
+func New(limit int, timeFrame time.Duration, flags int) astral.MiddlewareFunc {
 	return NewWithCatch(limit, timeFrame, flags, nil)
 }
 
-// Create a new limiter which calls "catch" if set when the limit is hit.
-func NewWithCatch(limit int, timeFrame time.Duration, flags int, catch middleware.CatchFunc) router.MiddlewareFunc {
+// NewWithCatch Create a new limiter which calls "catch" if set when the limit is hit.
+func NewWithCatch(limit int, timeFrame time.Duration, flags int, catch middleware.CatchFunc) astral.MiddlewareFunc {
 	m := timedmap.New()
 
 	cl.AddCleanable(m)
@@ -90,20 +91,20 @@ func NewWithCatch(limit int, timeFrame time.Duration, flags int, catch middlewar
 	return h.Middleware
 }
 
-// Create a new limiter shared across the application
-func NewShared(limit int, timeFrame time.Duration, flags int) router.MiddlewareFunc {
+// NewShared Create a new limiter shared across the application
+func NewShared(limit int, timeFrame time.Duration, flags int) astral.MiddlewareFunc {
 	return NewSharedWithCatch(limit, timeFrame, flags, nil)
 }
 
-// Create a new limiter shared across the application which calls "catch" if set when the limit is hit.
-func NewSharedWithCatch(limit int, timeFrame time.Duration, flags int, catch middleware.CatchFunc) router.MiddlewareFunc {
+// NewSharedWithCatch Create a new limiter shared across the application which calls "catch" if set when the limit is hit.
+func NewSharedWithCatch(limit int, timeFrame time.Duration, flags int, catch middleware.CatchFunc) astral.MiddlewareFunc {
 	h := &Handler{rateLimiters, limit, timeFrame, flags, catch}
 
 	return h.Middleware
 }
 
 // Construct the rate limiter key from the context given the set of flags
-func limiterKey(ctx *router.Context, flags int) string {
+func limiterKey(ctx *astral.Context, flags int) string {
 	k := make([]string, 0)
 
 	if flags&Command != 0 {
