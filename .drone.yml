@@ -16,4 +16,4 @@ steps:
       - apk --no-cache add git gcc musl-dev
       - go install github.com/onsi/ginkgo/v2/ginkgo
       - echo "Running tests"
-      - ginkgo router/
+      - ginkgo

@@ -3,7 +3,7 @@ package middleware
 import (
 	"errors"
 	"github.com/diamondburned/arikawa/v3/discord"
-	"meow.tf/astral/router"
+	"meow.tf/astral"
 )
 
 // Errors
@@ -13,9 +13,9 @@ var (
 )
 
 // RequireNSFW requires a message to be sent from an NSFW channel
-func RequireNSFW(catch CatchFunc) router.MiddlewareFunc {
-	return func(fn router.Handler) router.Handler {
-		return func(ctx *router.Context) {
+func RequireNSFW(catch CatchFunc) astral.MiddlewareFunc {
+	return func(fn astral.Handler) astral.Handler {
+		return func(ctx *astral.Context) {
 			if !ctx.Channel.NSFW {
 				callCatch(ctx, catch, ErrChannelNotNSFW)
 				return
@@ -26,9 +26,9 @@ func RequireNSFW(catch CatchFunc) router.MiddlewareFunc {
 }
 
 // ChannelType requires the specific channel type from the message
-func ChannelType(t discord.ChannelType, catch CatchFunc) router.MiddlewareFunc {
-	return func(fn router.Handler) router.Handler {
-		return func(ctx *router.Context) {
+func ChannelType(t discord.ChannelType, catch CatchFunc) astral.MiddlewareFunc {
+	return func(fn astral.Handler) astral.Handler {
+		return func(ctx *astral.Context) {
 			if ctx.Channel.Type != t {
 				callCatch(ctx, catch, ErrChannelType)
 				return

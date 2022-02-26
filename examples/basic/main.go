@@ -8,10 +8,10 @@ import (
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
 	"log"
+	"meow.tf/astral"
 	"meow.tf/astral/arguments"
 	"meow.tf/astral/middleware"
 	"meow.tf/astral/middleware/cooldown"
-	"meow.tf/astral/router"
 	"os"
 	"os/signal"
 	"strings"
@@ -25,7 +25,7 @@ var (
 	flagAppID   = flag.Int64("appID", 0, "App ID for commands")
 	flagGuildID = flag.Int64("guildID", 0, "Guild ID for commands")
 
-	route *router.Route
+	route *astral.Route
 )
 
 func main() {
@@ -41,68 +41,68 @@ func main() {
 	s.AddHandler(messageCreateHandler(s))
 	s.AddHandler(interactionHandler(s))
 
-	route = router.New()
+	route = astral.New()
 
-	ping := route.On("ping", func(ctx *router.Context) {
+	ping := route.On("ping", func(ctx *astral.Context) {
 		ctx.Reply("pong!")
 	}).Desc("Tests ping")
 
 	ping = ping.Export(true)
 
-	ping.On("pong", func(ctx *router.Context) {
+	ping.On("pong", func(ctx *astral.Context) {
 		ctx.Reply("I love ping pong!")
 	}).Desc("Tests pong")
 
 	// Test for registering commands with arguments
-	route.Group(func(r *router.Route) {
-		r.On("testing <type> <channel> [#discord channel] [message]", func(ctx *router.Context) {
+	route.Group(func(r *astral.Route) {
+		r.On("testing <type> <channel> [#discord channel] [message]", func(ctx *astral.Context) {
 			ctx.Replyf("Arg1: %s, Arg2: %s", ctx.Arg("type"), ctx.Arg("channel"))
 		}).Desc("Testing command")
 	})
 
 	// Test for NSFW middleware
-	route.Group(func(r *router.Route) {
+	route.Group(func(r *astral.Route) {
 		r.Use(middleware.RequireNSFW(middleware.CatchReply("You have to be in an nsfw channel for this!")))
 
-		r.On("nsfw", func(ctx *router.Context) {
+		r.On("nsfw", func(ctx *astral.Context) {
 			ctx.Reply("That's LEWD!")
 		})
 	})
 
 	// Test for cooldown/rate limiting middleware
-	route.Group(func(r *router.Route) {
+	route.Group(func(r *astral.Route) {
 		reply := middleware.CatchReply("You're doing that too often! SLOW DOWN!")
 
 		r.Use(cooldown.NewWithCatch(2, time.Minute, cooldown.User, reply))
 
-		r.On("test", func(ctx *router.Context) {
+		r.On("test", func(ctx *astral.Context) {
 			ctx.Reply("REPLY!")
 		})
 	})
 
 	// Test for aliasing
-	route.Group(func(r *router.Route) {
-		r.On("testalias", func(ctx *router.Context) {
+	route.Group(func(r *astral.Route) {
+		r.On("testalias", func(ctx *astral.Context) {
 			ctx.Reply("Called " + ctx.Command)
 		}).Alias("alias")
 	})
 
-	route.On("nesting", nil).On("level1 <test>", func(ctx *router.Context) {
+	route.On("nesting", nil).On("level1 <test>", func(ctx *astral.Context) {
 		ctx.Reply("Argument: " + ctx.Arg("test"))
 	})
 
 	// Test for autocomplete
-	route.On("autocomplete <test>", func(ctx *router.Context) {
+	route.On("autocomplete <test>", func(ctx *astral.Context) {
 		ctx.Reply("You chose: " + ctx.Arg("test"))
-	}).Argument("test", func(arg *router.Argument) {
+	}).Argument("test", func(arg *astral.Argument) {
 		arg.Description = "Test Arg"
-	}).Autocomplete("test", func(ctx *router.Context, option discord.AutocompleteOption) []router.StringChoice {
-		choices := []router.StringChoice{
+	}).Autocomplete("test", func(ctx *astral.Context, option discord.AutocompleteOption) []astral.StringChoice {
+		choices := []astral.StringChoice{
 			{Name: "Test", Value: "test"},
 		}
 
 		if option.Value != "" {
-			choices = append(choices, router.StringChoice{
+			choices = append(choices, astral.StringChoice{
 				Name:  option.Value,
 				Value: option.Value,
 			})
@@ -122,7 +122,7 @@ func main() {
 	if *flagGuildID != 0 {
 		log.Println("Registering guild commands")
 
-		cmds, err := router.RegisterGuildCommands(route, s, discord.AppID(*flagAppID), discord.GuildID(*flagGuildID))
+		cmds, err := astral.RegisterGuildCommands(route, s, discord.AppID(*flagAppID), discord.GuildID(*flagGuildID))
 
 		if err != nil {
 			log.Fatalln(err)
@@ -180,7 +180,7 @@ func messageCreateHandler(s *state.State) func(evt *gateway.MessageCreateEvent) 
 			args = []string{}
 		}
 
-		ctx, err := router.ContextFrom(s, evt, match, args, argString)
+		ctx, err := astral.ContextFrom(s, evt, match, args, argString)
 
 		if err != nil {
 			log.Println("Unable to create context:", err)
@@ -208,7 +208,7 @@ func interactionHandler(s *state.State) func(evt *gateway.InteractionCreateEvent
 				return
 			}
 
-			ctx, err := router.ContextFromInteraction(s, evt, match)
+			ctx, err := astral.ContextFromInteraction(s, evt, match)
 
 			if err != nil {
 				log.Println("Unable to create context:", err)
@@ -225,7 +225,7 @@ func interactionHandler(s *state.State) func(evt *gateway.InteractionCreateEvent
 				return
 			}
 
-			ctx, err := router.ContextFromInteraction(s, evt, match)
+			ctx, err := astral.ContextFromInteraction(s, evt, match)
 
 			if err != nil {
 				log.Println("Unable to create context:", err)

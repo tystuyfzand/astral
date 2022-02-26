@@ -2,13 +2,13 @@ package middleware
 
 import (
 	"github.com/diamondburned/arikawa/v3/discord"
-	"meow.tf/astral/router"
+	"meow.tf/astral"
 )
 
 // Permission validates the permission level
-func Permission(permission discord.Permissions) router.MiddlewareFunc {
-	return func(fn router.Handler) router.Handler {
-		return func(ctx *router.Context) {
+func Permission(permission discord.Permissions) astral.MiddlewareFunc {
+	return func(fn astral.Handler) astral.Handler {
+		return func(ctx *astral.Context) {
 			member, err := ctx.Session.Member(ctx.Guild.ID, ctx.User.ID)
 
 			if err != nil {

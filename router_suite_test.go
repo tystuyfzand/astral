@@ -1,4 +1,4 @@
-package router_test
+package astral_test
 
 import (
 	"testing"

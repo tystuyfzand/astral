@@ -1,4 +1,4 @@
-package router
+package astral
 
 func NewVariableBag() *VariableBag {
 	return &VariableBag{

@@ -1,4 +1,4 @@
-package router
+package astral
 
 import (
 	"github.com/diamondburned/arikawa/v3/discord"
