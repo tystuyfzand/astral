@@ -12,8 +12,8 @@ steps:
     commands:
       - echo "Running tests in Go container:"
       - go version
-      - echo "Installing ginkgo dependencies"
-      - go get github.com/onsi/ginkgo/v2/ginkgo
-      - go get github.com/onsi/gomega/...
+      - echo "Installing ginkgo and application dependencies"
+      - apk --no-cache add git gcc musl-dev
+      - go install github.com/onsi/ginkgo/v2/ginkgo
       - echo "Running tests"
       - ginkgo router/
