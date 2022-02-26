@@ -4,7 +4,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
-	"strconv"
+	"golang.org/x/sync/errgroup"
 	"strings"
 )
 
@@ -125,64 +125,6 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 		return nil, err
 	}
 
-	args := make([]string, r.ArgumentCount)
-
-	switch data := event.Data.(type) {
-	case *discord.CommandInteraction:
-		path := r.Path()
-		path = path[1:]
-
-		for _, opt := range optionsFromPath(path, data.Options) {
-			for _, arg := range r.Arguments {
-				argName := strings.ToLower(commandNameRe.ReplaceAllString(strings.ToLower(arg.Name), ""))
-
-				if argName != opt.Name {
-					continue
-				}
-
-				var val string
-
-				switch arg.Type {
-				case ArgumentTypeInt:
-					v, err := opt.IntValue()
-
-					if err != nil {
-						return nil, err
-					}
-
-					val = strconv.FormatInt(v, 10)
-				case ArgumentTypeUserMention:
-					v, err := opt.SnowflakeValue()
-
-					if err != nil {
-						return nil, err
-					}
-
-					val = discord.UserID(v).Mention()
-				case ArgumentTypeChannelMention:
-					v, err := opt.SnowflakeValue()
-
-					if err != nil {
-						return nil, err
-					}
-
-					val = discord.ChannelID(v).Mention()
-				default:
-					val = opt.Value.String()
-
-					if val[0] == '"' && val[len(val)-1] == '"' {
-						val = val[1 : len(val)-1]
-					}
-				}
-
-				args[arg.Index] = val
-
-				break
-			}
-		}
-	case *discord.AutocompleteInteraction:
-	}
-
 	ctx := &Context{
 		VariableBag: NewVariableBag(),
 
@@ -191,13 +133,111 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 		Guild:          g,
 		Channel:        c,
 		User:           event.Member.User,
-		Arguments:      args,
-		ArgumentCount:  len(args),
 		Interaction:    event,
 		ArgumentString: "",
 	}
 
 	ctx.responder = &InteractionResponder{ctx}
+
+	switch data := event.Data.(type) {
+	case *discord.CommandInteraction:
+		path := r.Path()
+		path = path[1:]
+
+		wg := new(errgroup.Group)
+
+		argCh := make(chan convertedArg)
+
+		checkArg := func(opt discord.CommandInteractionOption) func() error {
+			return func() error {
+				for _, arg := range r.Arguments {
+					argName := strings.ToLower(commandNameRe.ReplaceAllString(strings.ToLower(arg.Name), ""))
+
+					if argName != opt.Name {
+						continue
+					}
+
+					switch arg.Type {
+					case ArgumentTypeInt:
+						v, err := opt.IntValue()
+
+						if err != nil {
+							return err
+						}
+
+						argCh <- convertedArg{arg, v}
+					case ArgumentTypeUserMention:
+						v, err := opt.SnowflakeValue()
+
+						if err != nil {
+							return err
+						}
+
+						convertedVal, err := ctx.convertArg(arg, v)
+
+						if err != nil {
+							return err
+						}
+
+						argCh <- convertedArg{arg, convertedVal}
+					case ArgumentTypeChannelMention:
+						v, err := opt.SnowflakeValue()
+
+						if err != nil {
+							return err
+						}
+
+						convertedVal, err := ctx.convertArg(arg, v)
+
+						if err != nil {
+							return err
+						}
+
+						argCh <- convertedArg{arg, convertedVal}
+					default:
+						val := opt.Value.String()
+
+						if val[0] == '"' && val[len(val)-1] == '"' {
+							val = val[1 : len(val)-1]
+						}
+
+						convertedVal, err := ctx.convertArg(arg, val)
+
+						if err != nil {
+							return err
+						}
+
+						argCh <- convertedArg{arg, convertedVal}
+					}
+
+					break
+				}
+
+				return nil
+			}
+		}
+
+		for _, opt := range optionsFromPath(path, data.Options) {
+			wg.Go(checkArg(opt))
+		}
+
+		err := wg.Wait()
+
+		if err != nil {
+			return nil, err
+		}
+
+		close(argCh)
+
+		out := make(map[string]interface{})
+
+		for converted := range argCh {
+			out[converted.argument.Name] = converted.val
+		}
+
+		ctx.Arguments = out
+	case *discord.AutocompleteInteraction:
+	}
 
 	return ctx, nil
 }

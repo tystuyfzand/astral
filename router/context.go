@@ -4,6 +4,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
+	"golang.org/x/sync/errgroup"
 	"io"
 )
 
@@ -35,9 +36,15 @@ type Context struct {
 	Prefix         string
 	Command        string
 	ArgumentString string
-	Arguments      []string
+	Arguments      map[string]interface{}
 	ArgumentCount  int
 	responder      Responder
+}
+
+// convertedArg is an internal struct used to pass argument conversion off to a goroutine
+type convertedArg struct {
+	argument *Argument
+	val      interface{}
 }
 
 // ContextFrom creates a new MessageContext from the session and event
@@ -63,19 +70,57 @@ func ContextFrom(state *state.State, event *gateway.MessageCreateEvent, r *Route
 	ctx := &Context{
 		VariableBag: NewVariableBag(),
 
-		route:          r,
-		Session:        state,
-		Guild:          g,
-		Channel:        c,
-		User:           event.Author,
-		Arguments:      args,
-		ArgumentCount:  len(args),
-		Event:          event,
-		Message:        event.Message,
-		ArgumentString: argString,
+		route:   r,
+		Session: state,
+		Guild:   g,
+		Channel: c,
+		User:    event.Author,
+		Event:   event,
+		Message: event.Message,
 	}
 
 	ctx.responder = &MessageResponder{ctx}
+
+	argCh := make(chan convertedArg)
+
+	wg := new(errgroup.Group)
+
+	convertArg := func(arg *Argument) func() error {
+		return func() error {
+			convertedVal, err := ctx.convertArg(arg, args[arg.Index])
+
+			if err != nil {
+				return err
+			}
+
+			argCh <- convertedArg{arg, convertedVal}
+			return nil
+		}
+	}
+
+	for _, arg := range r.Arguments {
+		if len(args) < arg.Index {
+			continue
+		}
+
+		wg.Go(convertArg(arg))
+	}
+
+	err = wg.Wait()
+
+	if err != nil {
+		return nil, err
+	}
+
+	close(argCh)
+
+	out := make(map[string]interface{})
+
+	for converted := range argCh {
+		out[converted.argument.Name] = converted.val
+	}
+
+	ctx.Arguments = out
 
 	return ctx, nil
 }

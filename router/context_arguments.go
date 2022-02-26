@@ -1,29 +1,140 @@
 package router
 
 import (
+	"errors"
 	"github.com/diamondburned/arikawa/v3/discord"
 	emoji "github.com/tmdvs/Go-Emoji-Utils"
 	"strconv"
 )
 
-// Find the specified argument nand return the information and value
-func (c *Context) arg(name string) (*Argument, string) {
-	if arg, exists := c.route.Arguments[name]; exists {
-		if arg.Index > c.ArgumentCount-1 {
-			return arg, ""
-		}
+var (
+	ErrNoUser    = errors.New("no user found")
+	ErrNoChannel = errors.New("no channel found")
+)
 
-		return arg, c.Arguments[arg.Index]
+// Find the specified argument nand return the information and value
+func (c *Context) arg(name string) (*Argument, interface{}) {
+	if arg, exists := c.route.Arguments[name]; exists {
+		return arg, c.Arguments[arg.Name]
 	}
 
 	panic("undefined argument " + name)
 }
 
+func (c *Context) convertArg(arg *Argument, val interface{}) (interface{}, error) {
+	switch arg.Type {
+	case ArgumentTypeInt:
+		switch v := val.(type) {
+		case int:
+			return int64(v), nil
+		case int32:
+			return int64(v), nil
+		case int64:
+			return v, nil
+		}
+
+		v, err := strconv.ParseInt(val.(string), 10, 64)
+
+		if err != nil {
+			return nil, err
+		}
+
+		return v, nil
+	case ArgumentTypeFloat:
+		switch v := val.(type) {
+		case float32:
+			return float64(v), nil
+		case float64:
+			return v, nil
+		}
+
+		return strconv.ParseFloat(val.(string), 64)
+	case ArgumentTypeBool:
+		if v, ok := val.(bool); ok {
+			return v, nil
+		}
+
+		return strconv.ParseBool(val.(string))
+	case ArgumentTypeUserMention:
+		var sf discord.Snowflake
+		var ok bool
+
+		if sf, ok = val.(discord.Snowflake); !ok {
+			m := userMentionRegexp.FindStringSubmatch(val.(string))
+
+			if m == nil {
+				return nil, ErrNoUser
+			}
+
+			var err error
+			sf, err = discord.ParseSnowflake(m[1])
+
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return c.Session.User(discord.UserID(sf))
+	case ArgumentTypeChannelMention:
+		var sf discord.Snowflake
+		var ok bool
+
+		if sf, ok = val.(discord.Snowflake); !ok {
+			m := channelMentionRegexp.FindStringSubmatch(val.(string))
+
+			if m == nil {
+				return nil, ErrNoChannel
+			}
+
+			var err error
+			sf, err = discord.ParseSnowflake(m[1])
+
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return c.Session.Channel(discord.ChannelID(sf))
+	case ArgumentTypeEmoji:
+		m := emojiRegexp.FindStringSubmatch(val.(string))
+
+		if m != nil {
+			sf, err := discord.ParseSnowflake(m[3])
+
+			if err != nil {
+				return nil, err
+			}
+
+			return &discord.Emoji{
+				ID:       discord.EmojiID(sf),
+				Name:     m[2],
+				Animated: m[1] == "a",
+			}, nil
+		}
+
+		result, err := emoji.LookupEmoji(val.(string))
+
+		if err != nil {
+			return nil, err
+		}
+
+		return &discord.Emoji{
+			Name: result.Value,
+		}, nil
+	}
+
+	return val, nil
+}
+
 // Arg finds and returns a named argument as a string
 func (c *Context) Arg(name string) string {
-	_, val := c.arg(name)
+	arg, val := c.arg(name)
 
-	return val
+	if arg.Type != ArgumentTypeBasic {
+		panic("Trying to use a non-string argument as string")
+	}
+
+	return val.(string)
 }
 
 // IntArg finds and returns a named int argument
@@ -34,13 +145,7 @@ func (c *Context) IntArg(name string) int64 {
 		panic("Trying to use a non-int argument as int")
 	}
 
-	v, err := strconv.ParseInt(val, 10, 64)
-
-	if err != nil {
-		return -1
-	}
-
-	return v
+	return val.(int64)
 }
 
 // FloatArg finds and returns a named float argument
@@ -51,13 +156,7 @@ func (c *Context) FloatArg(name string) float64 {
 		panic("Trying to use a non-float argument as float")
 	}
 
-	v, err := strconv.ParseFloat(val, 64)
-
-	if err != nil {
-		return -1
-	}
-
-	return v
+	return val.(float64)
 }
 
 // BoolArg finds and returns a named bool argument
@@ -68,13 +167,7 @@ func (c *Context) BoolArg(name string) bool {
 		panic("Trying to use a non-bool argument as bool")
 	}
 
-	v, err := strconv.ParseBool(val)
-
-	if err != nil {
-		return false
-	}
-
-	return v
+	return val.(bool)
 }
 
 // UserArg finds and returns a named User argument
@@ -85,25 +178,7 @@ func (c *Context) UserArg(name string) *discord.User {
 		panic("Trying to use a non-user argument as user")
 	}
 
-	m := userMentionRegexp.FindStringSubmatch(val)
-
-	if m == nil {
-		return nil
-	}
-
-	sf, err := discord.ParseSnowflake(m[1])
-
-	if err != nil {
-		return nil
-	}
-
-	u, err := c.Session.User(discord.UserID(sf))
-
-	if err != nil {
-		return nil
-	}
-
-	return u
+	return val.(*discord.User)
 }
 
 // ChannelArg finds and returns a named Channel argument
@@ -119,29 +194,13 @@ func (c *Context) ChannelArgType(name string, t discord.ChannelType) *discord.Ch
 		panic("Trying to use a non-channel argument as channel")
 	}
 
-	m := channelMentionRegexp.FindStringSubmatch(val)
+	ch := val.(*discord.Channel)
 
-	if m != nil {
-		sf, err := discord.ParseSnowflake(m[1])
-
-		if err != nil {
-			return nil
-		}
-
-		c, err := c.Session.Channel(discord.ChannelID(sf))
-
-		if err != nil {
-			return nil
-		}
-
-		if t != 255 && c.Type != t {
-			return nil
-		}
-
-		return c
+	if t != 255 && ch.Type != t {
+		return nil
 	}
 
-	return nil
+	return ch
 }
 
 // EmojiArg finds and returns an argument as an emoji
@@ -152,29 +211,5 @@ func (c *Context) EmojiArg(name string) *discord.Emoji {
 		panic("Trying to use a non-emoji argument as emoji")
 	}
 
-	m := emojiRegexp.FindStringSubmatch(val)
-
-	if m != nil {
-		sf, err := discord.ParseSnowflake(m[3])
-
-		if err != nil {
-			return nil
-		}
-
-		return &discord.Emoji{
-			ID:       discord.EmojiID(sf),
-			Name:     m[2],
-			Animated: m[1] == "a",
-		}
-	}
-
-	result, err := emoji.LookupEmoji(val)
-
-	if err == nil {
-		return &discord.Emoji{
-			Name: result.Value,
-		}
-	}
-
-	return nil
+	return val.(*discord.Emoji)
 }

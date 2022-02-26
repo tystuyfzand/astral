@@ -16,9 +16,9 @@ var (
 // Handler is a command handler.
 type Handler func(*Context)
 
-// FindOpts represents options for FindComplex. Default is just Args in Find.
+// FindOpts represents options for FindComplex. Default is just Path in Find.
 type FindOpts struct {
-	Args      []string
+	Path      []string
 	MatchCase bool
 }
 
@@ -141,6 +141,9 @@ func (r *Route) Group(fn func(*Route)) *Route {
 	fn(rt)
 
 	for _, sub := range rt.routes {
+		// Re-assign parent to prevent issue when using group with sub routes
+		sub.parent = r
+
 		r.Add(sub)
 	}
 
@@ -163,14 +166,14 @@ func (r *Route) Use(f ...MiddlewareFunc) *Route {
 }
 
 // Find a route by arguments
-func (r *Route) Find(args ...string) *Route {
-	return r.FindComplex(FindOpts{Args: args})
+func (r *Route) Find(path ...string) *Route {
+	return r.FindComplex(FindOpts{Path: path})
 }
 
 // FindComplex finds a route by options, including args, case sensitive matching, etc
 func (r *Route) FindComplex(opts FindOpts) *Route {
-	if len(opts.Args) > 0 {
-		routeName := opts.Args[0]
+	if len(opts.Path) > 0 {
+		routeName := opts.Path[0]
 
 		if !opts.MatchCase {
 			routeName = strings.ToLower(routeName)
@@ -181,7 +184,7 @@ func (r *Route) FindComplex(opts FindOpts) *Route {
 		}
 
 		if subRoute, ok := r.routes[routeName]; ok {
-			opts.Args = opts.Args[1:]
+			opts.Path = opts.Path[1:]
 			return subRoute.FindComplex(opts)
 		}
 	}
@@ -195,17 +198,8 @@ func (r *Route) FindComplex(opts FindOpts) *Route {
 
 // Call executes a route.
 // Handlers are called synchronously.
-// Sub-routes will be walked until the stack is empty or a match couldn't be found.
+// Sub-routes will no longer be recursed automatically, and must be found using Find(...)
 func (r *Route) Call(ctx *Context) error {
-	if ctx.ArgumentCount > 0 {
-		if subRoute := r.Find(ctx.Arguments[1:]...); subRoute != nil && subRoute != r {
-			ctx.Prefix = ctx.Prefix + " " + ctx.Arguments[0]
-			ctx.Arguments = ctx.Arguments[1:]
-			ctx.ArgumentCount = len(ctx.Arguments)
-			return subRoute.Call(ctx)
-		}
-	}
-
 	ctx.route = r
 
 	if r.ArgumentCount > 0 {

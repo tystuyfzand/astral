@@ -1,0 +1,19 @@
+kind: pipeline
+name: amd64
+type: docker
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+  - name: test
+    image: golang:1.17-alpine
+    commands:
+      - echo "Running tests in Go container:"
+      - go version
+      - echo "Installing ginkgo dependencies"
+      - go get github.com/onsi/ginkgo/v2/ginkgo
+      - go get github.com/onsi/gomega/...
+      - echo "Running tests"
+      - ginkgo router/
