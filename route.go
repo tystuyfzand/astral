@@ -92,6 +92,7 @@ func (r *Route) Autocomplete(name string, f AutocompleteHandler) *Route {
 
 // Add adds a sub route to this route.
 func (r *Route) Add(n *Route) *Route {
+	n.parent = r
 	r.routes[n.Name] = n
 	return r
 }
@@ -141,9 +142,6 @@ func (r *Route) Group(fn func(*Route)) *Route {
 	fn(rt)
 
 	for _, sub := range rt.routes {
-		// Re-assign parent to prevent issue when using group with sub routes
-		sub.parent = r
-
 		r.Add(sub)
 	}
 

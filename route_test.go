@@ -19,6 +19,40 @@ var _ = ginkgo.Describe("Route", func() {
 			Expect(p).To(Equal([]string{"test", "something", "deeper"}))
 		})
 	})
+	ginkgo.Context("Groups", func() {
+		ginkgo.It("Should copy middleware from parent to group", func() {
+			parent.Group(func(r *Route) {
+				r.Use(func(fn Handler) Handler {
+					return func(ctx *Context) {
+						fn(ctx)
+					}
+				})
+
+				r.On("sub", func(ctx *Context) {
+					// Nothing
+				})
+			})
+
+			test := parent.Find("sub")
+
+			Expect(test).ToNot(BeNil())
+			Expect(len(test.middleware)).To(Equal(1))
+		})
+		ginkgo.It("Should assign parent when using group", func() {
+			sub := parent.On("sub", nil)
+
+			sub.Group(func(r *Route) {
+				r.On("test", func(ctx *Context) {
+					// Nothing
+				})
+			})
+
+			test := parent.Find("sub", "test")
+
+			Expect(test).ToNot(BeNil())
+			Expect(test.Path()).To(Equal([]string{"sub", "test"}))
+		})
+	})
 	ginkgo.Context("Validation", func() {
 		ginkgo.Context("Choices", func() {
 			var (

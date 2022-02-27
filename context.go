@@ -81,7 +81,7 @@ func ContextFrom(state *state.State, event *gateway.MessageCreateEvent, r *Route
 
 	ctx.responder = &MessageResponder{ctx}
 
-	argCh := make(chan convertedArg)
+	argCh := make(chan convertedArg, len(r.Arguments))
 
 	wg := new(errgroup.Group)
 

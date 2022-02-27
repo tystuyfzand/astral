@@ -56,6 +56,9 @@ var _ = ginkgo.Describe("Context Interactions", func() {
 			Expect(route.Name).To(Equal("something"))
 		})
 	})
+	ginkgo.Context("Autocomplete", func() {
+
+	})
 })
 
 func TestAutocomplete(t *testing.T) {
