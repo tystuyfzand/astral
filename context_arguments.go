@@ -134,6 +134,10 @@ func (c *Context) Arg(name string) string {
 		panic("Trying to use a non-string argument as string")
 	}
 
+	if val == nil {
+		return ""
+	}
+
 	return val.(string)
 }
 
@@ -143,6 +147,10 @@ func (c *Context) IntArg(name string) int64 {
 
 	if arg.Type != ArgumentTypeInt {
 		panic("Trying to use a non-int argument as int")
+	}
+
+	if val == nil {
+		return 0
 	}
 
 	return val.(int64)
@@ -156,6 +164,10 @@ func (c *Context) FloatArg(name string) float64 {
 		panic("Trying to use a non-float argument as float")
 	}
 
+	if val == nil {
+		return 0
+	}
+
 	return val.(float64)
 }
 
@@ -165,6 +177,10 @@ func (c *Context) BoolArg(name string) bool {
 
 	if arg.Type != ArgumentTypeBool {
 		panic("Trying to use a non-bool argument as bool")
+	}
+
+	if val == nil {
+		return false
 	}
 
 	return val.(bool)
@@ -192,6 +208,10 @@ func (c *Context) ChannelArgType(name string, t discord.ChannelType) *discord.Ch
 
 	if arg.Type != ArgumentTypeChannelMention {
 		panic("Trying to use a non-channel argument as channel")
+	}
+
+	if val == nil {
+		return nil
 	}
 
 	ch := val.(*discord.Channel)
