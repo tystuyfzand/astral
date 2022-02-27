@@ -99,7 +99,7 @@ func ContextFrom(state *state.State, event *gateway.MessageCreateEvent, r *Route
 	}
 
 	for _, arg := range r.Arguments {
-		if len(args) < arg.Index {
+		if len(args) <= arg.Index {
 			continue
 		}
 
