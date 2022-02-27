@@ -3,8 +3,8 @@ package cooldown
 import (
 	"github.com/diamondburned/timedmap"
 	"golang.org/x/time/rate"
-	"meow.tf/astral"
-	"meow.tf/astral/middleware"
+	"meow.tf/astral/v2"
+	"meow.tf/astral/v2/middleware"
 	"strings"
 	"time"
 )

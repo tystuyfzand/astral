@@ -4,9 +4,6 @@ github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMn
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/diamondburned/arikawa/v3 v3.0.0-rc.3/go.mod h1:5jBSNnp82Z/EhsKa6Wk9FsOqSxfVkNZDTDBPOj47LpY=
-github.com/diamondburned/arikawa/v3 v3.0.0-rc.4.0.20220214064026-6dc189519c4e h1:GKPbEZ6+CCt8oO4rHMMSCZTltzjxZ6hQeGGuDB5banI=
-github.com/diamondburned/arikawa/v3 v3.0.0-rc.4.0.20220214064026-6dc189519c4e/go.mod h1:5jBSNnp82Z/EhsKa6Wk9FsOqSxfVkNZDTDBPOj47LpY=
 github.com/diamondburned/arikawa/v3 v3.0.0-rc.5 h1:QexNI0czPwovlqBFiDYz4h4l60GOYHPEyWQxe6kQQd8=
 github.com/diamondburned/arikawa/v3 v3.0.0-rc.5/go.mod h1:5jBSNnp82Z/EhsKa6Wk9FsOqSxfVkNZDTDBPOj47LpY=
 github.com/diamondburned/timedmap v0.0.0-20200510234918-a50f7ffba1d8 h1:3Gg+m1ZbSzoYxJXB4G87jOfbn2GKsP7LX5kmEWDfPPc=
@@ -65,7 +62,6 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
 golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2/go.mod h1:djNgcEr1/C05ACkg1iLfiJU5Ep61QUkGW8qpdssI0+w=
 golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550/go.mod h1:yigFU9vqHzYiE8UmvKecakEJjdnWj3jj499lnFckfCI=
 golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9/go.mod h1:LzIPMQfyMNhhGPhUkYOs5KpL4U8rLKemX1yGLhDgUto=
-golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 h1:7I4JAnoQBe7ZtJcBaYHi5UtiO8tQHbUSXxL+pnGRANg=
 golang.org/x/crypto v0.0.0-20210921155107-089bfa567519/go.mod h1:GvvjBRRGRdwPK5ydBHafDWAxML/pGHZbMvKqRZ5+Abc=
 golang.org/x/mod v0.3.0/go.mod h1:s0Qsj1ACt9ePp/hMypM3fl4fZqREWJwdYDEqhRiZZUA=
 golang.org/x/net v0.0.0-20180906233101-161cd47e91fd/go.mod h1:mL1N/T3taQHkDXs73rZJwtUhF3w3ftmwwsq0BUmARs4=

@@ -7,7 +7,7 @@ import (
 	"github.com/mavolin/dismock/v3/pkg/dismock"
 	"github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"meow.tf/astral/arguments"
+	"meow.tf/astral/v2/arguments"
 	"strings"
 )
 

@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"meow.tf/astral"
+	"meow.tf/astral/v2"
 )
 
 const (
