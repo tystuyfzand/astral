@@ -6,6 +6,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/state"
 	"golang.org/x/sync/errgroup"
 	"io"
+	"sync"
 )
 
 type Responder interface {
@@ -81,9 +82,11 @@ func ContextFrom(state *state.State, event *gateway.MessageCreateEvent, r *Route
 
 	ctx.responder = &MessageResponder{ctx}
 
-	argCh := make(chan convertedArg, len(r.Arguments))
-
 	wg := new(errgroup.Group)
+
+	out := make(map[string]interface{})
+
+	var outLock sync.Mutex
 
 	convertArg := func(arg *Argument) func() error {
 		return func() error {
@@ -93,7 +96,9 @@ func ContextFrom(state *state.State, event *gateway.MessageCreateEvent, r *Route
 				return err
 			}
 
-			argCh <- convertedArg{arg, convertedVal}
+			outLock.Lock()
+			out[arg.Name] = convertedVal
+			outLock.Unlock()
 			return nil
 		}
 	}
@@ -110,14 +115,6 @@ func ContextFrom(state *state.State, event *gateway.MessageCreateEvent, r *Route
 
 	if err != nil {
 		return nil, err
-	}
-
-	close(argCh)
-
-	out := make(map[string]interface{})
-
-	for converted := range argCh {
-		out[converted.argument.Name] = converted.val
 	}
 
 	ctx.Arguments = out

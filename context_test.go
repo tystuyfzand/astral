@@ -102,9 +102,9 @@ var _ = ginkgo.Describe("Contexts", func() {
 
 			m.Channel(ch)
 
-			r = r.On("test <@user> <#channel>", nil)
+			r = r.On("test <@user> <#channel> [test]", nil)
 
-			ctx, err := ContextFrom(s, evt, r, []string{u.Mention(), ch.Mention()})
+			ctx, err := ContextFrom(s, evt, r, []string{u.Mention(), ch.Mention(), "test"})
 
 			Expect(err).To(BeNil())
 			Expect(ctx.Message).ToNot(BeNil())

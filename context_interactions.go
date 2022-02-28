@@ -6,6 +6,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/state"
 	"golang.org/x/sync/errgroup"
 	"strings"
+	"sync"
 )
 
 // FindInteraction finds a route path from a command interaction
@@ -146,7 +147,8 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 
 		wg := new(errgroup.Group)
 
-		argCh := make(chan convertedArg)
+		out := make(map[string]interface{})
+		var outLock sync.Mutex
 
 		checkArg := func(opt discord.CommandInteractionOption) func() error {
 			return func() error {
@@ -165,7 +167,9 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 							return err
 						}
 
-						argCh <- convertedArg{arg, v}
+						outLock.Lock()
+						out[arg.Name] = v
+						outLock.Unlock()
 					case ArgumentTypeUserMention:
 						v, err := opt.SnowflakeValue()
 
@@ -179,7 +183,9 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 							return err
 						}
 
-						argCh <- convertedArg{arg, convertedVal}
+						outLock.Lock()
+						out[arg.Name] = convertedVal
+						outLock.Unlock()
 					case ArgumentTypeChannelMention:
 						v, err := opt.SnowflakeValue()
 
@@ -193,7 +199,9 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 							return err
 						}
 
-						argCh <- convertedArg{arg, convertedVal}
+						outLock.Lock()
+						out[arg.Name] = convertedVal
+						outLock.Unlock()
 					default:
 						val := opt.Value.String()
 
@@ -207,7 +215,9 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 							return err
 						}
 
-						argCh <- convertedArg{arg, convertedVal}
+						outLock.Lock()
+						out[arg.Name] = convertedVal
+						outLock.Unlock()
 					}
 
 					break
@@ -225,14 +235,6 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 
 		if err != nil {
 			return nil, err
-		}
-
-		close(argCh)
-
-		out := make(map[string]interface{})
-
-		for converted := range argCh {
-			out[converted.argument.Name] = converted.val
 		}
 
 		ctx.Arguments = out
