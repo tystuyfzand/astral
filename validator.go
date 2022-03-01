@@ -34,6 +34,11 @@ func (r *Route) Validate(ctx *Context) error {
 			return fmt.Errorf("The %s argument is required.", arg.Name)
 		}
 
+		// Don't validate optional arguments
+		if !exists {
+			continue
+		}
+
 		switch arg.Type {
 		case ArgumentTypeInt:
 			err = validateInt(ctx, arg, argValue.(int64))
