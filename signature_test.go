@@ -123,7 +123,7 @@ var _ = ginkgo.Describe("Signatures", func() {
 				Expect(arg.Min).To(BeEquivalentTo(2))
 			})
 			ginkgo.It("Should properly parse optional int arguments with minimums", func() {
-				parseSignature(r, "test [arg int min:3]")
+				parseSignature(r, "test [arg int min:3 max:100]")
 
 				arg := r.Arguments["arg"]
 
@@ -131,6 +131,7 @@ var _ = ginkgo.Describe("Signatures", func() {
 				Expect(arg.Required).To(BeFalse())
 				Expect(arg.Type).To(Equal(ArgumentTypeInt))
 				Expect(arg.Min).To(BeEquivalentTo(3))
+				Expect(arg.Max).To(BeEquivalentTo(100))
 			})
 		})
 		ginkgo.Context("Floats", func() {

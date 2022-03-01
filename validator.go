@@ -39,6 +39,8 @@ func (r *Route) Validate(ctx *Context) error {
 			err = validateInt(ctx, arg, argValue.(int64))
 		case ArgumentTypeFloat:
 			err = validateFloat(ctx, arg, argValue.(float64))
+		case ArgumentTypeBasic:
+			err = validateString(ctx, arg, argValue.(string))
 		}
 
 		if err != nil {
@@ -71,7 +73,7 @@ func validateInt(ctx *Context, arg *Argument, v int64) error {
 		return fmt.Errorf("%s must be larger than %d.", arg.Name, arg.Min)
 	}
 
-	if arg.Max != nil && v < arg.Max.(int64) {
+	if arg.Max != nil && v > arg.Max.(int64) {
 		return fmt.Errorf("%s must be smaller than %d.", arg.Name, arg.Max)
 	}
 
@@ -84,7 +86,20 @@ func validateFloat(ctx *Context, arg *Argument, v float64) error {
 		return fmt.Errorf("%s must be larger than %f.", arg.Name, arg.Min)
 	}
 
-	if arg.Max != nil && v < arg.Max.(float64) {
+	if arg.Max != nil && v > arg.Max.(float64) {
+		return fmt.Errorf("%s must be smaller than %f.", arg.Name, arg.Max)
+	}
+
+	return nil
+}
+
+// validateString checks a string argument to ensure the length is greater than min and less than max
+func validateString(ctx *Context, arg *Argument, v string) error {
+	if arg.Min != nil && int64(len(v)) < arg.Min.(int64) {
+		return fmt.Errorf("%s must be larger than %f.", arg.Name, arg.Min)
+	}
+
+	if arg.Max != nil && int64(len(v)) > arg.Max.(int64) {
 		return fmt.Errorf("%s must be smaller than %f.", arg.Name, arg.Max)
 	}
 
