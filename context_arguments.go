@@ -194,6 +194,10 @@ func (c *Context) UserArg(name string) *discord.User {
 		panic("Trying to use a non-user argument as user")
 	}
 
+	if val == nil {
+		return nil
+	}
+
 	return val.(*discord.User)
 }
 
@@ -229,6 +233,10 @@ func (c *Context) EmojiArg(name string) *discord.Emoji {
 
 	if arg.Type != ArgumentTypeEmoji {
 		panic("Trying to use a non-emoji argument as emoji")
+	}
+
+	if val == nil {
+		return nil
 	}
 
 	return val.(*discord.Emoji)
