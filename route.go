@@ -11,6 +11,7 @@ import (
 var (
 	userMentionRegexp    = regexp.MustCompile("<@!?(\\d+)>")
 	channelMentionRegexp = regexp.MustCompile("<#(\\d+)>")
+	roleMentionRegexp    = regexp.MustCompile("<@&(\\d+)>")
 )
 
 // Handler is a command handler.

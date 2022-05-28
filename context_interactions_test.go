@@ -168,6 +168,36 @@ var _ = ginkgo.Describe("Context Interactions", func() {
 			Expect(ctx.Message).ToNot(BeNil())
 			Expect(ctx.UserArg("user").ID).To(Equal(u.ID))
 		})
+		ginkgo.It("Should parse arguments using role discord endpoint", func() {
+			guildId := discord.GuildID(123456)
+
+			role := discord.Role{
+				ID:   12345,
+				Name: "testing",
+			}
+
+			m.Roles(guildId, []discord.Role{role})
+
+			r = r.On("test <&role>", nil)
+
+			rJSON, _ := role.ID.MarshalJSON()
+
+			evt.Data = &discord.CommandInteraction{
+				Options: []discord.CommandInteractionOption{
+					{
+						Type:  discord.RoleOptionType,
+						Name:  "role",
+						Value: rJSON,
+					},
+				},
+			}
+
+			ctx, err := ContextFromInteraction(s, evt, r)
+
+			Expect(err).To(BeNil())
+			Expect(ctx.Message).ToNot(BeNil())
+			Expect(ctx.UserArg("role").ID).To(Equal(role.ID))
+		})
 		ginkgo.It("Should parse multiple arguments simultaneously", func() {
 			u := discord.User{
 				ID:            12345,
@@ -210,6 +240,9 @@ var _ = ginkgo.Describe("Context Interactions", func() {
 			Expect(ctx.Message).ToNot(BeNil())
 			Expect(ctx.UserArg("user").ID).To(Equal(u.ID))
 			Expect(ctx.ChannelArg("channel").ID).To(Equal(ch.ID))
+		})
+		ginkgo.It("Should parse nested arguments properly", func() {
+
 		})
 	})
 })

@@ -21,6 +21,8 @@ func (t ArgumentType) DiscordType() discord.CommandOptionType {
 		return discord.UserOptionType
 	case ArgumentTypeChannelMention:
 		return discord.ChannelOptionType
+	case ArgumentTypeRole:
+		return discord.RoleOptionType
 	default:
 		return discord.StringOptionType
 	}
@@ -34,6 +36,7 @@ const (
 	ArgumentTypeEmoji
 	ArgumentTypeUserMention
 	ArgumentTypeChannelMention
+	ArgumentTypeRole
 )
 
 const (
@@ -104,6 +107,9 @@ func parseSignature(r *Route, signature string) *Route {
 							name = name[1:]
 						} else if name[0] == '#' {
 							t = ArgumentTypeChannelMention
+							name = name[1:]
+						} else if name[0] == '&' {
+							t = ArgumentTypeRole
 							name = name[1:]
 						}
 

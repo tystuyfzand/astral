@@ -10,6 +10,7 @@ import (
 var (
 	ErrNoUser    = errors.New("no user found")
 	ErrNoChannel = errors.New("no channel found")
+	ErrNoRole    = errors.New("no role found")
 )
 
 // Find the specified argument nand return the information and value
@@ -121,6 +122,26 @@ func (c *Context) convertArg(arg *Argument, val interface{}) (interface{}, error
 		return &discord.Emoji{
 			Name: result.Value,
 		}, nil
+	case ArgumentTypeRole:
+		var sf discord.Snowflake
+		var ok bool
+
+		if sf, ok = val.(discord.Snowflake); !ok {
+			m := roleMentionRegexp.FindStringSubmatch(val.(string))
+
+			if m == nil {
+				return nil, ErrNoRole
+			}
+
+			var err error
+			sf, err = discord.ParseSnowflake(m[1])
+
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		return c.Session.Role(c.Guild.ID, discord.RoleID(sf))
 	}
 
 	return val, nil
@@ -240,4 +261,19 @@ func (c *Context) EmojiArg(name string) *discord.Emoji {
 	}
 
 	return val.(*discord.Emoji)
+}
+
+// RoleArg finds and returns a named Role argument
+func (c *Context) RoleArg(name string) *discord.Role {
+	arg, val := c.arg(name)
+
+	if arg.Type != ArgumentTypeRole {
+		panic("Trying to use a non-role argument as role")
+	}
+
+	if val == nil {
+		return nil
+	}
+
+	return val.(*discord.Role)
 }
