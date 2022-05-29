@@ -234,9 +234,13 @@ func argsFromRoute(r *Route) ([]discord.CommandOption, error) {
 				Required:    arg.Required,
 				Description: arg.Description,
 			}
-		case ArgumentTypeEmoji:
-			fallthrough
-		case ArgumentTypeBasic:
+		case ArgumentTypeRole:
+			options[arg.Index] = &discord.RoleOption{
+				OptionName:  argName,
+				Required:    arg.Required,
+				Description: arg.Description,
+			}
+		case ArgumentTypeEmoji, ArgumentTypeBasic:
 			opt := &discord.StringOption{
 				OptionName:  argName,
 				Required:    arg.Required,
