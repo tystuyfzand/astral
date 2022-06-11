@@ -202,6 +202,22 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 						outLock.Lock()
 						out[arg.Name] = convertedVal
 						outLock.Unlock()
+					case ArgumentTypeRole:
+						v, err := opt.SnowflakeValue()
+
+						if err != nil {
+							return err
+						}
+
+						convertedVal, err := ctx.convertArg(arg, v)
+
+						if err != nil {
+							return err
+						}
+
+						outLock.Lock()
+						out[arg.Name] = convertedVal
+						outLock.Unlock()
 					default:
 						val := opt.Value.String()
 
