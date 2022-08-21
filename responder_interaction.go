@@ -103,3 +103,29 @@ func (m *InteractionResponder) ReplyFile(name string, r io.Reader) (*discord.Mes
 
 	return nil, err
 }
+
+// Respond replies to a user by serializing Response
+func (m *InteractionResponder) Respond(r Response) (*discord.Message, error) {
+	var embeds *[]discord.Embed = nil
+
+	if r.Embeds != nil {
+		embeds = &r.Embeds
+	}
+
+	var content option.NullableString = nil
+
+	if r.Content != "" {
+		content = option.NewNullableString(r.Content)
+	}
+
+	err := m.ctx.Session.RespondInteraction(m.ctx.Interaction.ID, m.ctx.Interaction.Token, api.InteractionResponse{
+		Type: api.MessageInteractionWithSource,
+		Data: &api.InteractionResponseData{
+			Content: content,
+			Embeds:  embeds,
+			Files:   r.Files,
+		},
+	})
+
+	return nil, err
+}

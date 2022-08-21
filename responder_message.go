@@ -120,3 +120,19 @@ func (m *MessageResponder) ReplyFile(name string, r io.Reader) (*discord.Message
 
 	return m.ctx.Session.SendMessageComplex(m.ctx.Channel.ID, data)
 }
+
+// Respond replies to a user by serializing Response
+func (m *MessageResponder) Respond(r Response) (*discord.Message, error) {
+	data := api.SendMessageData{
+		Content:   r.Content,
+		Files:     r.Files,
+		Embeds:    r.Embeds,
+		Reference: &discord.MessageReference{MessageID: m.ctx.Message.ID},
+	}
+
+	if err := checkMessageChannel(m.ctx); err != nil {
+		return nil, err
+	}
+
+	return m.ctx.Session.SendMessageComplex(m.ctx.Channel.ID, data)
+}
