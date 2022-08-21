@@ -40,3 +40,7 @@ func (c *Context) ReplyEmbed(embed *discord.Embed) (*discord.Message, error) {
 func (c *Context) ReplyFile(name string, r io.Reader) (*discord.Message, error) {
 	return c.responder.ReplyFile(name, r)
 }
+
+func (c *Context) Respond(r Response) (*discord.Message, error) {
+	return c.responder.Respond(r)
+}
