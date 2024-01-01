@@ -19,6 +19,7 @@ type Responder interface {
 	ReplyEmbed(embed *discord.Embed) (*discord.Message, error)
 	ReplyFile(name string, r io.Reader) (*discord.Message, error)
 	Respond(r Response) (*discord.Message, error)
+	Acknowledge() error
 }
 
 type Response struct {

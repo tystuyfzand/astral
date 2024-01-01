@@ -44,3 +44,7 @@ func (c *Context) ReplyFile(name string, r io.Reader) (*discord.Message, error) 
 func (c *Context) Respond(r Response) (*discord.Message, error) {
 	return c.responder.Respond(r)
 }
+
+func (c *Context) Acknowledge() error {
+	return c.responder.Acknowledge()
+}

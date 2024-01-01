@@ -11,7 +11,8 @@ import (
 )
 
 type InteractionResponder struct {
-	ctx *Context
+	ctx          *Context
+	acknowledged bool
 }
 
 // Usage builds and shows command usage
@@ -118,14 +119,34 @@ func (m *InteractionResponder) Respond(r Response) (*discord.Message, error) {
 		content = option.NewNullableString(r.Content)
 	}
 
-	err := m.ctx.Session.RespondInteraction(m.ctx.Interaction.ID, m.ctx.Interaction.Token, api.InteractionResponse{
+	data := api.InteractionResponse{
 		Type: api.MessageInteractionWithSource,
 		Data: &api.InteractionResponseData{
 			Content: content,
 			Embeds:  embeds,
 			Files:   r.Files,
 		},
-	})
+	}
+
+	var err error
+
+	if m.acknowledged {
+		_, err = m.ctx.Session.FollowUpInteraction(m.ctx.Interaction.AppID, m.ctx.Interaction.Token, *data.Data)
+	} else {
+		err = m.ctx.Session.RespondInteraction(m.ctx.Interaction.ID, m.ctx.Interaction.Token, data)
+	}
 
 	return nil, err
+}
+
+func (m *InteractionResponder) Acknowledge() error {
+	err := m.ctx.Session.RespondInteraction(m.ctx.Interaction.ID, m.ctx.Interaction.Token, api.InteractionResponse{
+		Type: api.DeferredMessageInteractionWithSource,
+	})
+
+	if err == nil {
+		m.acknowledged = true
+	}
+
+	return err
 }
