@@ -120,7 +120,9 @@ func (r *Route) Export(export bool) *Route {
 
 // On adds a handler for a specific command.
 // Signature can be a simple command, or a string like the following:
-//  	command <arg1> <arg2> [arg3] [#channel] [@user]
+//
+//	command <arg1> <arg2> [arg3] [#channel] [@user]
+//
 // The library will automatically parse and validate the required arguments.
 // <> means an argument will be required, [] says it's optional
 // As well as required and optional types, you can use # and @ to signify
@@ -250,10 +252,10 @@ func (r *Route) CallAutocomplete(ctx *Context, options []discord.AutocompleteOpt
 	ret := arg.autocomplete(ctx, *opt)
 
 	if ret != nil {
-		choices := make([]api.AutocompleteChoice, len(ret))
+		choices := make(api.AutocompleteStringChoices, len(ret))
 
 		for i, choice := range ret {
-			choices[i] = api.AutocompleteChoice{
+			choices[i] = discord.StringChoice{
 				Name:  choice.Name,
 				Value: choice.Value,
 			}
