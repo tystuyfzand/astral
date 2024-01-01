@@ -1,6 +1,6 @@
 module meow.tf/astral/v2
 
-go 1.17
+go 1.20
 
 require (
 	github.com/diamondburned/arikawa/v3 v3.3.4
