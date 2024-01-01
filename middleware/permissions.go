@@ -19,7 +19,7 @@ func Permission(permission discord.Permissions) astral.MiddlewareFunc {
 			if ctx.Guild.Roles == nil {
 				roles, err := ctx.Session.Roles(ctx.Guild.ID)
 
-				if err != il {
+				if err != nil {
 					return
 				}
 
