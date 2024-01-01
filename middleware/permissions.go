@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/samber/lo"
 	"meow.tf/astral/v2"
 )
 
@@ -15,7 +16,21 @@ func Permission(permission discord.Permissions) astral.MiddlewareFunc {
 				return
 			}
 
-			p := discord.CalcOverwrites(*ctx.Guild, *ctx.Channel, *member)
+			if ctx.Guild.Roles == nil {
+				roles, err := ctx.Session.Roles(ctx.Guild.ID)
+
+				if err != il {
+					return
+				}
+
+				ctx.Guild.Roles = roles
+			}
+
+			roles := lo.Filter(ctx.Guild.Roles, func(role discord.Role, _ int) bool {
+				return lo.Contains(member.RoleIDs, role.ID)
+			})
+
+			p := discord.CalcOverrides(*ctx.Guild, *ctx.Channel, *member, roles)
 
 			if !p.Has(permission) {
 				return // No permission

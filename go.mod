@@ -8,6 +8,7 @@ require (
 	github.com/mavolin/dismock/v3 v3.0.0
 	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.30.0
+	github.com/samber/lo v1.39.0
 	github.com/tmdvs/Go-Emoji-Utils v1.1.0
 	golang.org/x/sync v0.5.0
 	golang.org/x/time v0.5.0
@@ -23,6 +24,7 @@ require (
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/stretchr/testify v1.8.1 // indirect
+	golang.org/x/exp v0.0.0-20220303212507-bbda1eaf7a17 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.14.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
