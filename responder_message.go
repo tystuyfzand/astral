@@ -136,3 +136,7 @@ func (m *MessageResponder) Respond(r Response) (*discord.Message, error) {
 
 	return m.ctx.Session.SendMessageComplex(m.ctx.Channel.ID, data)
 }
+
+func (m *MessageResponder) Acknowledge() error {
+	return nil
+}
