@@ -138,7 +138,7 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 		ArgumentString: "",
 	}
 
-	ctx.responder = &InteractionResponder{ctx}
+	ctx.responder = &InteractionResponder{ctx: ctx}
 
 	switch data := event.Data.(type) {
 	case *discord.CommandInteraction:
