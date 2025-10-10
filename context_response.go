@@ -49,6 +49,10 @@ func (c *Context) Acknowledge() error {
 	return c.responder.Acknowledge()
 }
 
+func (c *Context) Error(message string) error {
+	return c.responder.Error(message)
+}
+
 func (c *Context) Responder() Responder {
 	return c.responder
 }
