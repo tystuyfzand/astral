@@ -140,3 +140,7 @@ func (m *MessageResponder) Respond(r Response) (*discord.Message, error) {
 func (m *MessageResponder) Acknowledge() error {
 	return nil
 }
+
+func (m *MessageResponder) Error(message string) error {
+	return nil
+}

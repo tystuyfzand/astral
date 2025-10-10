@@ -139,6 +139,26 @@ func (m *InteractionResponder) Respond(r Response) (*discord.Message, error) {
 	return nil, err
 }
 
+func (m *InteractionResponder) Error(message string) error {
+	var err error
+
+	data := api.InteractionResponse{
+		Type: api.MessageInteractionWithSource,
+		Data: &api.InteractionResponseData{
+			Content: option.NewNullableString(message),
+			Flags:   discord.EphemeralMessage,
+		},
+	}
+
+	if m.acknowledged {
+		_, err = m.ctx.Session.FollowUpInteraction(m.ctx.Interaction.AppID, m.ctx.Interaction.Token, *data.Data)
+	} else {
+		err = m.ctx.Session.RespondInteraction(m.ctx.Interaction.ID, m.ctx.Interaction.Token, data)
+	}
+
+	return err
+}
+
 func (m *InteractionResponder) Acknowledge() error {
 	err := m.ctx.Session.RespondInteraction(m.ctx.Interaction.ID, m.ctx.Interaction.Token, api.InteractionResponse{
 		Type: api.DeferredMessageInteractionWithSource,

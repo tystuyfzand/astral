@@ -48,3 +48,11 @@ func (c *Context) Respond(r Response) (*discord.Message, error) {
 func (c *Context) Acknowledge() error {
 	return c.responder.Acknowledge()
 }
+
+func (c *Context) Responder() Responder {
+	return c.responder
+}
+
+func (c *Context) SetResponder(responder Responder) {
+	c.responder = responder
+}

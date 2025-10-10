@@ -20,6 +20,7 @@ type Responder interface {
 	ReplyFile(name string, r io.Reader) (*discord.Message, error)
 	Respond(r Response) (*discord.Message, error)
 	Acknowledge() error
+	Error(message string) error
 }
 
 type Response struct {
