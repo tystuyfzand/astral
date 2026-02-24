@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"errors"
+	"github.com/auroradevllc/astral/v3"
 	"github.com/diamondburned/arikawa/v3/discord"
-	"meow.tf/astral/v2"
 )
 
 // Errors

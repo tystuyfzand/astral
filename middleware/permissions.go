@@ -1,9 +1,9 @@
 package middleware
 
 import (
+	"github.com/auroradevllc/astral/v3"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/samber/lo"
-	"meow.tf/astral/v2"
 )
 
 // Permission validates the permission level

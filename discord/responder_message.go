@@ -1,17 +1,17 @@
-package discord
+package astral
 
 import (
 	"errors"
 	"fmt"
-	"github.com/auroradevllc/astral/v3"
 	"github.com/diamondburned/arikawa/v3/api"
+	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/utils/sendpart"
 	"io"
 	"strings"
 )
 
 type MessageResponder struct {
-	ctx *astral.Context
+	ctx *Context
 }
 
 var (
@@ -19,7 +19,7 @@ var (
 )
 
 // Usage builds and shows command usage
-func (m *MessageResponder) Usage(usage ...string) (astral.Message, error) {
+func (m *MessageResponder) Usage(usage ...string) (*discord.Message, error) {
 	if len(usage) == 0 {
 		usage = []string{m.ctx.route.Usage}
 	}
@@ -30,7 +30,7 @@ func (m *MessageResponder) Usage(usage ...string) (astral.Message, error) {
 }
 
 // Send text to the originating channel
-func (m *MessageResponder) Send(text string) (astral.Message, error) {
+func (m *MessageResponder) Send(text string) (*discord.Message, error) {
 	if text == "" {
 		return nil, ErrEmptyText
 	}
@@ -43,12 +43,12 @@ func (m *MessageResponder) Send(text string) (astral.Message, error) {
 }
 
 // Sendf Sends formattable text to the originating channel
-func (m *MessageResponder) Sendf(format string, a ...interface{}) (astral.Message, error) {
+func (m *MessageResponder) Sendf(format string, a ...interface{}) (*discord.Message, error) {
 	return m.Send(fmt.Sprintf(format, a...))
 }
 
 // SendFile sends a file by name and the data from r
-func (m *MessageResponder) SendFile(name string, r io.Reader) (astral.Message, error) {
+func (m *MessageResponder) SendFile(name string, r io.Reader) (*discord.Message, error) {
 	data := api.SendMessageData{
 		Files: []sendpart.File{
 			{Name: name, Reader: r},
@@ -59,12 +59,12 @@ func (m *MessageResponder) SendFile(name string, r io.Reader) (astral.Message, e
 }
 
 // Replyf Builds a message and replies with formatted text
-func (m *MessageResponder) Replyf(format string, a ...interface{}) (astral.Message, error) {
+func (m *MessageResponder) Replyf(format string, a ...interface{}) (*discord.Message, error) {
 	return m.Reply(fmt.Sprintf(format, a...))
 }
 
 // ReplyTo replies to a specific user
-func (m *MessageResponder) ReplyTo(to discord.UserID, text string) (astral.Message, error) {
+func (m *MessageResponder) ReplyTo(to discord.UserID, text string) (*discord.Message, error) {
 	return m.Send(fmt.Sprintf("%s %s", to.Mention(), text))
 }
 

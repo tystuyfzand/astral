@@ -1,6 +1,7 @@
 package astral
 
 import (
+	discordadapter "github.com/auroradevllc/astral/v3/discord"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
@@ -17,10 +18,10 @@ type Context struct {
 	Session        *state.State
 	Event          *gateway.MessageCreateEvent
 	Interaction    *gateway.InteractionCreateEvent
-	Guild          *discord.Guild
-	Channel        *discord.Channel
-	Message        discord.Message
-	User           discord.User
+	Server         Server
+	Channel        Channel
+	Message        Message
+	User           User
 	Prefix         string
 	Command        string
 	ArgumentString string
@@ -60,11 +61,11 @@ func ContextFrom(state *state.State, event *gateway.MessageCreateEvent, r *Route
 
 		route:   r,
 		Session: state,
-		Guild:   g,
-		Channel: c,
-		User:    event.Author,
+		Server:  &discordadapter.Server{Guild: g},
+		Channel: &discordadapter.Channel{Channel: c},
+		User:    discordadapter.NewUser(&event.Author),
 		Event:   event,
-		Message: event.Message,
+		Message: discordadapter.NewMessage(event.Message),
 	}
 
 	ctx.responder = &MessageResponder{ctx}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/diamondburned/arikawa/v3/utils/json/option"
 	"github.com/diamondburned/arikawa/v3/utils/sendpart"
 	"io"
@@ -12,13 +13,14 @@ import (
 
 type InteractionResponder struct {
 	ctx          *Context
+	State        *state.State
 	acknowledged bool
 }
 
 // Usage builds and shows command usage
 func (m *InteractionResponder) Usage(usage ...string) (*discord.Message, error) {
 	if len(usage) == 0 {
-		usage = []string{m.ctx.route.Usage}
+		usage = []string{m.ctx.Route.Usage}
 	}
 
 	usage[0] = strings.Replace(usage[0], "{command}", m.ctx.route.Name, -1)
@@ -52,7 +54,7 @@ func (m *InteractionResponder) SendFile(name string, r io.Reader) (*discord.Mess
 		},
 	}
 
-	return m.ctx.Session.SendMessageComplex(m.ctx.Channel.ID, data)
+	return m.State.SendMessageComplex(m.ctx.Channel.ID, data)
 }
 
 // Replyf Builds a message and replies with formatted text
@@ -106,7 +108,7 @@ func (m *InteractionResponder) ReplyFile(name string, r io.Reader) (*discord.Mes
 }
 
 // Respond replies to a user by serializing Response
-func (m *InteractionResponder) Respond(r Response) (Message, error) {
+func (m *InteractionResponder) Respond(r Response) (*discord.Message, error) {
 	var embeds *[]discord.Embed = nil
 
 	if r.Embeds != nil {
@@ -119,25 +121,12 @@ func (m *InteractionResponder) Respond(r Response) (Message, error) {
 		content = option.NewNullableString(r.Content)
 	}
 
-	var files []sendpart.File
-
-	if len(r.Files) > 0 {
-		files = make([]sendpart.File, len(r.Files))
-
-		for i, f := range r.Files {
-			files[i] = sendpart.File{
-				Name:   f.Name,
-				Reader: f.Reader,
-			}
-		}
-	}
-
 	data := api.InteractionResponse{
 		Type: api.MessageInteractionWithSource,
 		Data: &api.InteractionResponseData{
 			Content: content,
 			Embeds:  embeds,
-			Files:   files,
+			Files:   r.Files,
 		},
 	}
 

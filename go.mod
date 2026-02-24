@@ -1,4 +1,4 @@
-module meow.tf/astral/v2
+module github.com/auroradevllc/astral/v3
 
 go 1.23
 

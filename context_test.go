@@ -1,13 +1,13 @@
 package astral
 
 import (
+	"github.com/auroradevllc/astral/v3/arguments"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/mavolin/dismock/v3/pkg/dismock"
 	"github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"meow.tf/astral/v2/arguments"
 	"strings"
 )
 
