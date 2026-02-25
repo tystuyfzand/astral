@@ -1,7 +1,9 @@
 package astral
 
 import (
-	"github.com/auroradevllc/astral/v3/adapter"
+	"sync"
+
+	"golang.org/x/sync/errgroup"
 )
 
 // Context is the base "context" object.
@@ -10,11 +12,11 @@ type Context struct {
 	*VariableBag
 
 	Route          *Route
-	Session        adapter.Client
-	Server         adapter.Server
-	Channel        adapter.Channel
-	Message        adapter.Message
-	User           adapter.User
+	Session        Client
+	Server         Server
+	Channel        Channel
+	Message        Message
+	User           User
 	Prefix         string
 	Command        string
 	ArgumentString string
@@ -48,4 +50,45 @@ func NewContext(route *Route, opt ...ContextOption) *Context {
 type convertedArg struct {
 	argument *Argument
 	val      interface{}
+}
+
+func (c *Context) ParseArguments(args []string) error {
+	wg := new(errgroup.Group)
+
+	out := make(map[string]interface{})
+
+	var outLock sync.Mutex
+
+	convertArg := func(arg *Argument) func() error {
+		return func() error {
+			convertedVal, err := c.ConvertArg(arg, args[arg.Index])
+
+			if err != nil {
+				return err
+			}
+
+			outLock.Lock()
+			out[arg.Name] = convertedVal
+			outLock.Unlock()
+			return nil
+		}
+	}
+
+	for _, arg := range c.Route.Arguments {
+		if len(args) <= arg.Index {
+			continue
+		}
+
+		wg.Go(convertArg(arg))
+	}
+
+	err := wg.Wait()
+
+	if err != nil {
+		return err
+	}
+
+	c.Arguments = out
+
+	return nil
 }

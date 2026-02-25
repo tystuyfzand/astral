@@ -2,8 +2,6 @@ package astral
 
 import (
 	"errors"
-	"github.com/diamondburned/arikawa/v3/discord"
-	emoji "github.com/tmdvs/Go-Emoji-Utils"
 	"strconv"
 )
 
@@ -15,14 +13,14 @@ var (
 
 // Find the specified argument nand return the information and value
 func (c *Context) arg(name string) (*Argument, interface{}) {
-	if arg, exists := c.route.Arguments[name]; exists {
+	if arg, exists := c.Route.Arguments[name]; exists {
 		return arg, c.Arguments[arg.Name]
 	}
 
 	panic("undefined argument " + name)
 }
 
-func (c *Context) convertArg(arg *Argument, val interface{}) (interface{}, error) {
+func (c *Context) ConvertArg(arg *Argument, val any) (any, error) {
 	switch arg.Type {
 	case ArgumentTypeInt:
 		switch v := val.(type) {
@@ -57,91 +55,30 @@ func (c *Context) convertArg(arg *Argument, val interface{}) (interface{}, error
 
 		return strconv.ParseBool(val.(string))
 	case ArgumentTypeUserMention:
-		var sf discord.Snowflake
-		var ok bool
-
-		if sf, ok = val.(discord.Snowflake); !ok {
-			m := userMentionRegexp.FindStringSubmatch(val.(string))
-
-			if m == nil {
-				return nil, ErrNoUser
-			}
-
-			var err error
-			sf, err = discord.ParseSnowflake(m[1])
-
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		return c.Session.User(discord.UserID(sf))
-	case ArgumentTypeChannelMention:
-		var sf discord.Snowflake
-		var ok bool
-
-		if sf, ok = val.(discord.Snowflake); !ok {
-			m := channelMentionRegexp.FindStringSubmatch(val.(string))
-
-			if m == nil {
-				return nil, ErrNoChannel
-			}
-
-			var err error
-			sf, err = discord.ParseSnowflake(m[1])
-
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		return c.Session.Channel(discord.ChannelID(sf))
-	case ArgumentTypeEmoji:
-		m := emojiRegexp.FindStringSubmatch(val.(string))
+		// Match Discord style <@ID> mentions
+		m := userMentionRegexp.FindStringSubmatch(val.(string))
 
 		if m != nil {
-			sf, err := discord.ParseSnowflake(m[3])
-
-			if err != nil {
-				return nil, err
-			}
-
-			return &discord.Emoji{
-				ID:       discord.EmojiID(sf),
-				Name:     m[2],
-				Animated: m[1] == "a",
-			}, nil
+			val = m[1]
 		}
 
-		result, err := emoji.LookupEmoji(val.(string))
+		// TODO: Values can be int64s/etc
 
-		if err != nil {
-			return nil, err
+		return c.Session.User(ID(val.(string)))
+	case ArgumentTypeChannelMention:
+		m := channelMentionRegexp.FindStringSubmatch(val.(string))
+
+		if m != nil {
+			val = m[1]
 		}
 
-		return &discord.Emoji{
-			Name: result.Value,
-		}, nil
+		// TODO: Values can be int64s/etc
+
+		return c.Server.Channel(ID(val.(string)))
+	case ArgumentTypeEmoji:
+		return c.Server.Emoji(ID(val.(string)))
 	case ArgumentTypeRole:
-		var sf discord.Snowflake
-		var ok bool
-
-		if sf, ok = val.(discord.Snowflake); !ok {
-			m := roleMentionRegexp.FindStringSubmatch(val.(string))
-
-			if m == nil {
-				return nil, ErrNoRole
-			}
-
-			var err error
-			sf, err = discord.ParseSnowflake(m[1])
-
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		return c.Session.Role(c.Guild.ID, discord.RoleID(sf))
+		return c.Server.Role(ID(val.(string)))
 	}
 
 	return val, nil
@@ -208,7 +145,7 @@ func (c *Context) BoolArg(name string) bool {
 }
 
 // UserArg finds and returns a named User argument
-func (c *Context) UserArg(name string) *discord.User {
+func (c *Context) UserArg(name string) User {
 	arg, val := c.arg(name)
 
 	if arg.Type != ArgumentTypeUserMention {
@@ -219,16 +156,16 @@ func (c *Context) UserArg(name string) *discord.User {
 		return nil
 	}
 
-	return val.(*discord.User)
+	return val.(User)
 }
 
 // ChannelArg finds and returns a named Channel argument
-func (c *Context) ChannelArg(name string) *discord.Channel {
+func (c *Context) ChannelArg(name string) Channel {
 	return c.ChannelArgType(name, 255)
 }
 
 // ChannelArgType finds and returns Channel argument with a specified type
-func (c *Context) ChannelArgType(name string, t discord.ChannelType) *discord.Channel {
+func (c *Context) ChannelArgType(name string, t ChannelType) Channel {
 	arg, val := c.arg(name)
 
 	if arg.Type != ArgumentTypeChannelMention {
@@ -239,9 +176,9 @@ func (c *Context) ChannelArgType(name string, t discord.ChannelType) *discord.Ch
 		return nil
 	}
 
-	ch := val.(*discord.Channel)
+	ch := val.(Channel)
 
-	if t != 255 && ch.Type != t {
+	if t != 255 && ch.Type() != t {
 		return nil
 	}
 
@@ -249,7 +186,7 @@ func (c *Context) ChannelArgType(name string, t discord.ChannelType) *discord.Ch
 }
 
 // EmojiArg finds and returns an argument as an emoji
-func (c *Context) EmojiArg(name string) *discord.Emoji {
+func (c *Context) EmojiArg(name string) Emoji {
 	arg, val := c.arg(name)
 
 	if arg.Type != ArgumentTypeEmoji {
@@ -260,11 +197,11 @@ func (c *Context) EmojiArg(name string) *discord.Emoji {
 		return nil
 	}
 
-	return val.(*discord.Emoji)
+	return val.(Emoji)
 }
 
 // RoleArg finds and returns a named Role argument
-func (c *Context) RoleArg(name string) *discord.Role {
+func (c *Context) RoleArg(name string) Role {
 	arg, val := c.arg(name)
 
 	if arg.Type != ArgumentTypeRole {
@@ -275,5 +212,5 @@ func (c *Context) RoleArg(name string) *discord.Role {
 		return nil
 	}
 
-	return val.(*discord.Role)
+	return val.(Role)
 }

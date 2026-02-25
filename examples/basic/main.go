@@ -4,19 +4,21 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"github.com/auroradevllc/astral/v3"
-	"github.com/auroradevllc/astral/v3/arguments"
-	"github.com/auroradevllc/astral/v3/middleware"
-	"github.com/auroradevllc/astral/v3/middleware/cooldown"
-	"github.com/diamondburned/arikawa/v3/discord"
-	"github.com/diamondburned/arikawa/v3/gateway"
-	"github.com/diamondburned/arikawa/v3/state"
 	"log"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/auroradevllc/astral/v3"
+	"github.com/auroradevllc/astral/v3/arguments"
+	"github.com/auroradevllc/astral/v3/arikawa"
+	"github.com/auroradevllc/astral/v3/middleware"
+	"github.com/auroradevllc/astral/v3/middleware/cooldown"
+	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/arikawa/v3/gateway"
+	"github.com/diamondburned/arikawa/v3/state"
 )
 
 var (
@@ -38,8 +40,10 @@ func main() {
 
 	s := state.NewWithIntents("Bot "+*flagToken, intents...)
 
+	i := arikawa.NewInteractionHandler(s, discord.AppID(*flagAppID))
+
 	s.AddHandler(messageCreateHandler(s))
-	s.AddHandler(interactionHandler(s))
+	s.AddHandler(interactionHandler(s, i))
 
 	route = astral.New()
 
@@ -101,12 +105,13 @@ func main() {
 			{Name: "Test", Value: "test"},
 		}
 
-		if option.Value != "" {
-			choices = append(choices, astral.StringChoice{
-				Name:  option.Value,
-				Value: option.Value,
-			})
-		}
+		// TODO: Arikawa updated this option field
+		//if option.Value != "" {
+		//	choices = append(choices, astral.StringChoice{
+		//		Name:  option.Value,
+		//		Value: option.Value,
+		//	})
+		//}
 
 		return choices
 	}).Export(true).Desc("Autocomplete test")
@@ -120,9 +125,11 @@ func main() {
 	log.Println("Ready.")
 
 	if *flagGuildID != 0 {
+		h := arikawa.NewInteractionHandler(s, discord.AppID(*flagAppID))
+
 		log.Println("Registering guild commands")
 
-		cmds, err := astral.RegisterGuildCommands(route, s, discord.AppID(*flagAppID), discord.GuildID(*flagGuildID))
+		cmds, err := h.RegisterGuildCommands(route, discord.GuildID(*flagGuildID))
 
 		if err != nil {
 			log.Fatalln(err)
@@ -170,7 +177,7 @@ func messageCreateHandler(s *state.State) func(evt *gateway.MessageCreateEvent) 
 			args = []string{}
 		}
 
-		ctx, err := astral.ContextFrom(s, evt, match, args)
+		ctx, err := arikawa.ContextFrom(s, evt, match, args)
 
 		if err != nil {
 			log.Println("Unable to create context:", err)
@@ -183,7 +190,7 @@ func messageCreateHandler(s *state.State) func(evt *gateway.MessageCreateEvent) 
 	}
 }
 
-func interactionHandler(s *state.State) func(evt *gateway.InteractionCreateEvent) {
+func interactionHandler(s *state.State, i *arikawa.InteractionHandler) func(evt *gateway.InteractionCreateEvent) {
 	return func(evt *gateway.InteractionCreateEvent) {
 		switch data := evt.Data.(type) {
 		case *discord.CommandInteraction:
@@ -191,14 +198,14 @@ func interactionHandler(s *state.State) func(evt *gateway.InteractionCreateEvent
 
 			log.Println(string(b))
 			// Find root command
-			match := route.FindInteraction(data.Name, data.Options)
+			match := i.FindInteraction(data.Name, data.Options)
 
 			if match == nil {
 				log.Println("No match for command args")
 				return
 			}
 
-			ctx, err := astral.ContextFromInteraction(s, evt, match)
+			ctx, err := arikawa.ContextFromInteraction(s, evt, match)
 
 			if err != nil {
 				log.Println("Unable to create context:", err)
@@ -208,14 +215,14 @@ func interactionHandler(s *state.State) func(evt *gateway.InteractionCreateEvent
 			go match.Call(ctx)
 		case *discord.AutocompleteInteraction:
 			// Find root command
-			match, opts := route.FindAutocomplete(data.Name, data.Options)
+			match, opts := i.FindAutocomplete(data.Name, data.Options)
 
 			if match == nil {
 				log.Println("No match for command args")
 				return
 			}
 
-			ctx, err := astral.ContextFromInteraction(s, evt, match)
+			ctx, err := arikawa.ContextFromInteraction(s, evt, match)
 
 			if err != nil {
 				log.Println("Unable to create context:", err)
@@ -224,7 +231,7 @@ func interactionHandler(s *state.State) func(evt *gateway.InteractionCreateEvent
 
 			log.Println("Calling autocomplete")
 
-			err = match.CallAutocomplete(ctx, opts)
+			err = i.CallAutocomplete(ctx, &evt.InteractionEvent, opts)
 
 			if err != nil {
 				log.Println("Error calling:", err)

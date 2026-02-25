@@ -1,4 +1,4 @@
-package discord
+package arikawa
 
 import (
 	"github.com/auroradevllc/astral/v3"
@@ -37,4 +37,14 @@ func UserID(id astral.ID) discord.UserID {
 	}
 
 	return discord.UserID(sf)
+}
+
+func RoleID(id astral.ID) discord.RoleID {
+	sf, err := Snowflake(id)
+
+	if err != nil {
+		return discord.NullRoleID
+	}
+
+	return discord.RoleID(sf)
 }

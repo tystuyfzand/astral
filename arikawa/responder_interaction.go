@@ -1,43 +1,45 @@
-package discord
+package arikawa
 
 import (
 	"fmt"
+	"io"
+	"strings"
+
 	"github.com/auroradevllc/astral/v3"
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
-	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/diamondburned/arikawa/v3/utils/json/option"
 	"github.com/diamondburned/arikawa/v3/utils/sendpart"
-	"io"
-	"strings"
 )
 
 type InteractionResponder struct {
 	ctx          *astral.Context
-	State        *state.State
-	Interaction  *gateway.InteractionCreateEvent
+	state        *state.State
+	interaction  discord.InteractionEvent
+	channel      *discord.Channel
+	user         *discord.User
 	acknowledged bool
 }
 
 // Usage builds and shows command usage
-func (m *InteractionResponder) Usage(usage ...string) (*discord.Message, error) {
+func (m *InteractionResponder) Usage(usage ...string) (astral.Message, error) {
 	if len(usage) == 0 {
 		usage = []string{m.ctx.Route.Usage}
 	}
 
-	usage[0] = strings.Replace(usage[0], "{command}", m.ctx.route.Name, -1)
+	usage[0] = strings.Replace(usage[0], "{command}", m.ctx.Route.Name, -1)
 
 	return m.Reply(usage[0])
 }
 
 // Send text to the originating channel
-func (m *InteractionResponder) Send(text string) (*discord.Message, error) {
+func (m *InteractionResponder) Send(text string) (astral.Message, error) {
 	if text == "" {
 		return nil, ErrEmptyText
 	}
 
-	if err := checkMessageChannel(m.ctx); err != nil {
+	if err := m.checkMessageChannel(); err != nil {
 		return nil, err
 	}
 
@@ -45,38 +47,44 @@ func (m *InteractionResponder) Send(text string) (*discord.Message, error) {
 }
 
 // Sendf Sends formattable text to the originating channel
-func (m *InteractionResponder) Sendf(format string, a ...interface{}) (*discord.Message, error) {
+func (m *InteractionResponder) Sendf(format string, a ...interface{}) (astral.Message, error) {
 	return m.Reply(fmt.Sprintf(format, a...))
 }
 
 // SendFile sends a file by name and the data from r
-func (m *InteractionResponder) SendFile(name string, r io.Reader) (*discord.Message, error) {
+func (m *InteractionResponder) SendFile(name string, r io.Reader) (astral.Message, error) {
 	data := api.SendMessageData{
 		Files: []sendpart.File{
 			{Name: name, Reader: r},
 		},
 	}
 
-	return m.State.SendMessageComplex(ChannelID(m.ctx.Channel.ID()), data)
+	msg, err := m.state.SendMessageComplex(ChannelID(m.ctx.Channel.ID()), data)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return NewMessage(msg), nil
 }
 
 // Replyf Builds a message and replies with formatted text
-func (m *InteractionResponder) Replyf(format string, a ...interface{}) (*discord.Message, error) {
+func (m *InteractionResponder) Replyf(format string, a ...interface{}) (astral.Message, error) {
 	return m.Reply(fmt.Sprintf(format, a...))
 }
 
 // ReplyTo replies to a specific user
-func (m *InteractionResponder) ReplyTo(to discord.UserID, text string) (*discord.Message, error) {
+func (m *InteractionResponder) ReplyTo(to discord.UserID, text string) (astral.Message, error) {
 	return m.Reply(fmt.Sprintf("%s %s", to.Mention(), text))
 }
 
 // Reply with a user mention
-func (m *InteractionResponder) Reply(text string) (*discord.Message, error) {
+func (m *InteractionResponder) Reply(text string) (astral.Message, error) {
 	if text == "" {
 		return nil, ErrEmptyText
 	}
 
-	err := m.State.RespondInteraction(m.ctx.Interaction.ID, m.ctx.Interaction.Token, api.InteractionResponse{
+	err := m.state.RespondInteraction(m.interaction.ID, m.interaction.Token, api.InteractionResponse{
 		Type: api.MessageInteractionWithSource,
 		Data: &api.InteractionResponseData{Content: option.NewNullableString(text)},
 	})
@@ -85,8 +93,8 @@ func (m *InteractionResponder) Reply(text string) (*discord.Message, error) {
 }
 
 // ReplyEmbed replies to a user with an embed object
-func (m *InteractionResponder) ReplyEmbed(embed *discord.Embed) (*discord.Message, error) {
-	err := m.ctx.Session.RespondInteraction(m.ctx.Interaction.ID, m.ctx.Interaction.Token, api.InteractionResponse{
+func (m *InteractionResponder) ReplyEmbed(embed *discord.Embed) (astral.Message, error) {
+	err := m.state.RespondInteraction(m.interaction.ID, m.interaction.Token, api.InteractionResponse{
 		Type: api.MessageInteractionWithSource,
 		Data: &api.InteractionResponseData{
 			Embeds: &[]discord.Embed{*embed},
@@ -97,8 +105,8 @@ func (m *InteractionResponder) ReplyEmbed(embed *discord.Embed) (*discord.Messag
 }
 
 // ReplyFile replies to a user with a file object
-func (m *InteractionResponder) ReplyFile(name string, r io.Reader) (*discord.Message, error) {
-	err := m.ctx.Session.RespondInteraction(m.ctx.Interaction.ID, m.ctx.Interaction.Token, api.InteractionResponse{
+func (m *InteractionResponder) ReplyFile(name string, r io.Reader) (astral.Message, error) {
+	err := m.state.RespondInteraction(m.interaction.ID, m.interaction.Token, api.InteractionResponse{
 		Type: api.MessageInteractionWithSource,
 		Data: &api.InteractionResponseData{
 			Files: []sendpart.File{
@@ -111,11 +119,11 @@ func (m *InteractionResponder) ReplyFile(name string, r io.Reader) (*discord.Mes
 }
 
 // Respond replies to a user by serializing Response
-func (m *InteractionResponder) Respond(r Response) (*discord.Message, error) {
+func (m *InteractionResponder) Respond(r astral.Response) (astral.Message, error) {
 	var embeds *[]discord.Embed = nil
 
 	if r.Embeds != nil {
-		embeds = &r.Embeds
+		//embeds = &r.Embeds
 	}
 
 	var content option.NullableString = nil
@@ -124,21 +132,34 @@ func (m *InteractionResponder) Respond(r Response) (*discord.Message, error) {
 		content = option.NewNullableString(r.Content)
 	}
 
+	var files []sendpart.File
+
+	if len(r.Files) > 0 {
+		files = make([]sendpart.File, len(r.Files))
+
+		for i, f := range r.Files {
+			files[i] = sendpart.File{
+				Name:   f.Name,
+				Reader: f.Reader,
+			}
+		}
+	}
+
 	data := api.InteractionResponse{
 		Type: api.MessageInteractionWithSource,
 		Data: &api.InteractionResponseData{
 			Content: content,
 			Embeds:  embeds,
-			Files:   r.Files,
+			Files:   files,
 		},
 	}
 
 	var err error
 
 	if m.acknowledged {
-		_, err = m.ctx.Session.FollowUpInteraction(m.ctx.Interaction.AppID, m.ctx.Interaction.Token, *data.Data)
+		_, err = m.state.FollowUpInteraction(m.interaction.AppID, m.interaction.Token, *data.Data)
 	} else {
-		err = m.ctx.Session.RespondInteraction(m.ctx.Interaction.ID, m.ctx.Interaction.Token, data)
+		err = m.state.RespondInteraction(m.interaction.ID, m.interaction.Token, data)
 	}
 
 	return nil, err
@@ -156,16 +177,16 @@ func (m *InteractionResponder) Error(message string) error {
 	}
 
 	if m.acknowledged {
-		_, err = m.ctx.Session.FollowUpInteraction(m.ctx.Interaction.AppID, m.ctx.Interaction.Token, *data.Data)
+		_, err = m.state.FollowUpInteraction(m.interaction.AppID, m.interaction.Token, *data.Data)
 	} else {
-		err = m.ctx.Session.RespondInteraction(m.ctx.Interaction.ID, m.ctx.Interaction.Token, data)
+		err = m.state.RespondInteraction(m.interaction.ID, m.interaction.Token, data)
 	}
 
 	return err
 }
 
 func (m *InteractionResponder) Acknowledge() error {
-	err := m.ctx.Session.RespondInteraction(m.ctx.Interaction.ID, m.ctx.Interaction.Token, api.InteractionResponse{
+	err := m.state.RespondInteraction(m.interaction.ID, m.interaction.Token, api.InteractionResponse{
 		Type: api.DeferredMessageInteractionWithSource,
 	})
 
@@ -174,4 +195,18 @@ func (m *InteractionResponder) Acknowledge() error {
 	}
 
 	return err
+}
+
+func (m *InteractionResponder) checkMessageChannel() error {
+	if m.channel.Type == discord.DirectMessage {
+		var err error
+
+		m.channel, err = m.state.CreatePrivateChannel(m.user.ID)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

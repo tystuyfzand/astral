@@ -2,8 +2,6 @@ package astral
 
 import (
 	"errors"
-	"github.com/diamondburned/arikawa/v3/api"
-	"github.com/diamondburned/arikawa/v3/discord"
 	"regexp"
 	"strings"
 )
@@ -47,6 +45,11 @@ func New() *Route {
 		routes:     make(map[string]*Route),
 		aliases:    make(map[string]string),
 	}
+}
+
+// Children returns the routes that this parent route has
+func (r *Route) Children() map[string]*Route {
+	return r.routes
 }
 
 // Path returns the route's full path
@@ -116,6 +119,10 @@ func (r *Route) Alias(alias string) *Route {
 func (r *Route) Export(export bool) *Route {
 	r.export = export
 	return r
+}
+
+func (r *Route) IsExported() bool {
+	return r.export
 }
 
 // On adds a handler for a specific command.
@@ -201,12 +208,12 @@ func (r *Route) FindComplex(opts FindOpts) *Route {
 // Handlers are called synchronously.
 // Sub-routes will no longer be recursed automatically, and must be found using Find(...)
 func (r *Route) Call(ctx *Context) error {
-	ctx.route = r
+	ctx.Route = r
 
 	if r.ArgumentCount > 0 {
 		// Arguments are cached, construct usage
 		if err := r.Validate(ctx); err != nil {
-			if err == UsageError {
+			if errors.Is(err, UsageError) {
 				_, err = ctx.Reply("Usage: " + ctx.Prefix + r.Usage)
 			} else {
 				_, err = ctx.Reply(err.Error())
@@ -222,62 +229,6 @@ func (r *Route) Call(ctx *Context) error {
 	}
 
 	handler(ctx)
-
-	return nil
-}
-
-var (
-	ErrUnknownOption   = errors.New("unknown option")
-	ErrNotAutocomplete = errors.New("option is not registered to autocomplete")
-)
-
-// CallAutocomplete calls the autocomplete handler for a route's argument
-func (r *Route) CallAutocomplete(ctx *Context, options []discord.AutocompleteOption) error {
-	opt := focusedOption(options)
-
-	if opt == nil {
-		return ErrUnknownOption
-	}
-
-	arg, exists := r.Arguments[opt.Name]
-
-	if !exists {
-		return ErrUnknownOption
-	}
-
-	if arg.autocomplete == nil {
-		return ErrNotAutocomplete
-	}
-
-	ret := arg.autocomplete(ctx, *opt)
-
-	if ret != nil {
-		choices := make(api.AutocompleteStringChoices, len(ret))
-
-		for i, choice := range ret {
-			choices[i] = discord.StringChoice{
-				Name:  choice.Name,
-				Value: choice.Value,
-			}
-		}
-
-		return ctx.Session.RespondInteraction(ctx.Interaction.ID, ctx.Interaction.Token, api.InteractionResponse{
-			Type: api.AutocompleteResult,
-			Data: &api.InteractionResponseData{
-				Choices: &choices,
-			},
-		})
-	}
-
-	return nil
-}
-
-func focusedOption(options []discord.AutocompleteOption) *discord.AutocompleteOption {
-	for _, opt := range options {
-		if opt.Focused {
-			return &opt
-		}
-	}
 
 	return nil
 }

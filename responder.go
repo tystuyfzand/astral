@@ -1,8 +1,9 @@
 package astral
 
 import (
-	"github.com/diamondburned/arikawa/v3/discord"
 	"io"
+
+	"github.com/diamondburned/arikawa/v3/discord"
 )
 
 // Responder represents an available responder
@@ -20,19 +21,4 @@ type Responder interface {
 	Respond(r Response) (Message, error)
 	Acknowledge() error
 	Error(message string) error
-}
-
-type Response struct {
-	Content string
-	Embeds  []discord.Embed
-	Files   []File
-}
-
-type File struct {
-	Name   string
-	Size   int64
-	Reader io.Reader
-}
-
-type Embed struct {
 }
