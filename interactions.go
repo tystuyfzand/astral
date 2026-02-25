@@ -11,6 +11,12 @@ import (
 	"strings"
 )
 
+type ID string
+
+func (i ID) String() string {
+	return string(i)
+}
+
 type registrationError struct {
 	cause error
 	route *Route

@@ -1,12 +1,7 @@
 package astral
 
 import (
-	discordadapter "github.com/auroradevllc/astral/v3/discord"
-	"github.com/diamondburned/arikawa/v3/discord"
-	"github.com/diamondburned/arikawa/v3/gateway"
-	"github.com/diamondburned/arikawa/v3/state"
-	"golang.org/x/sync/errgroup"
-	"sync"
+	"github.com/auroradevllc/astral/v3/adapter"
 )
 
 // Context is the base "context" object.
@@ -14,14 +9,12 @@ import (
 type Context struct {
 	*VariableBag
 
-	route          *Route
-	Session        *state.State
-	Event          *gateway.MessageCreateEvent
-	Interaction    *gateway.InteractionCreateEvent
-	Server         Server
-	Channel        Channel
-	Message        Message
-	User           User
+	Route          *Route
+	Session        adapter.Client
+	Server         adapter.Server
+	Channel        adapter.Channel
+	Message        adapter.Message
+	User           adapter.User
 	Prefix         string
 	Command        string
 	ArgumentString string
@@ -30,82 +23,29 @@ type Context struct {
 	responder      Responder
 }
 
+type ContextOption func(*Context)
+
+func WithResponder(r Responder) ContextOption {
+	return func(ctx *Context) {
+		ctx.responder = r
+	}
+}
+
+func NewContext(route *Route, opt ...ContextOption) *Context {
+	c := &Context{
+		VariableBag: NewVariableBag(),
+		Route:       route,
+	}
+
+	for _, opt := range opt {
+		opt(c)
+	}
+
+	return c
+}
+
 // convertedArg is an internal struct used to pass argument conversion off to a goroutine
 type convertedArg struct {
 	argument *Argument
 	val      interface{}
-}
-
-// ContextFrom creates a new MessageContext from the session and event
-func ContextFrom(state *state.State, event *gateway.MessageCreateEvent, r *Route, args []string) (*Context, error) {
-	// Find the channel for the event, which doesn't have a built-in discordgo equivalent of .Guild()
-	c, err := state.Channel(event.ChannelID)
-
-	if err != nil {
-		return nil, err
-	}
-
-	var g *discord.Guild
-
-	if c.Type != discord.DirectMessage {
-		// Find the guild for that channel. This uses State if enabled.
-		g, err = state.Guild(c.GuildID)
-
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	ctx := &Context{
-		VariableBag: NewVariableBag(),
-
-		route:   r,
-		Session: state,
-		Server:  &discordadapter.Server{Guild: g},
-		Channel: &discordadapter.Channel{Channel: c},
-		User:    discordadapter.NewUser(&event.Author),
-		Event:   event,
-		Message: discordadapter.NewMessage(event.Message),
-	}
-
-	ctx.responder = &MessageResponder{ctx}
-
-	wg := new(errgroup.Group)
-
-	out := make(map[string]interface{})
-
-	var outLock sync.Mutex
-
-	convertArg := func(arg *Argument) func() error {
-		return func() error {
-			convertedVal, err := ctx.convertArg(arg, args[arg.Index])
-
-			if err != nil {
-				return err
-			}
-
-			outLock.Lock()
-			out[arg.Name] = convertedVal
-			outLock.Unlock()
-			return nil
-		}
-	}
-
-	for _, arg := range r.Arguments {
-		if len(args) <= arg.Index {
-			continue
-		}
-
-		wg.Go(convertArg(arg))
-	}
-
-	err = wg.Wait()
-
-	if err != nil {
-		return nil, err
-	}
-
-	ctx.Arguments = out
-
-	return ctx, nil
 }

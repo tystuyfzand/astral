@@ -1,17 +1,23 @@
-package astral
+package discord
 
 import (
 	"errors"
 	"fmt"
+	"github.com/auroradevllc/astral/v3"
+	"github.com/auroradevllc/astral/v3/adapter"
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/arikawa/v3/gateway"
+	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/diamondburned/arikawa/v3/utils/sendpart"
 	"io"
 	"strings"
 )
 
 type MessageResponder struct {
-	ctx *Context
+	ctx   *astral.Context
+	event *gateway.MessageCreateEvent
+	state *state.State
 }
 
 var (
@@ -21,10 +27,10 @@ var (
 // Usage builds and shows command usage
 func (m *MessageResponder) Usage(usage ...string) (*discord.Message, error) {
 	if len(usage) == 0 {
-		usage = []string{m.ctx.route.Usage}
+		usage = []string{m.ctx.Route.Usage}
 	}
 
-	usage[0] = strings.Replace(usage[0], "{command}", strings.Join(m.ctx.route.Path(), " "), -1)
+	usage[0] = strings.Replace(usage[0], "{command}", strings.Join(m.ctx.Route.Path(), " "), -1)
 
 	return m.Reply(usage[0])
 }
@@ -39,7 +45,7 @@ func (m *MessageResponder) Send(text string) (*discord.Message, error) {
 		return nil, err
 	}
 
-	return m.ctx.Session.SendMessage(m.ctx.Channel.ID, text)
+	return m.state.SendMessage(m.ctx.Channel.ID, text)
 }
 
 // Sendf Sends formattable text to the originating channel
@@ -68,8 +74,8 @@ func (m *MessageResponder) ReplyTo(to discord.UserID, text string) (*discord.Mes
 	return m.Send(fmt.Sprintf("%s %s", to.Mention(), text))
 }
 
-func checkMessageChannel(ctx *Context) error {
-	if ctx.Channel.Type == discord.DirectMessage {
+func checkMessageChannel(ctx *astral.Context) error {
+	if ctx.Channel.Type() == adapter.ChannelTypeDirect {
 		var err error
 
 		ctx.Channel, err = ctx.Session.CreatePrivateChannel(ctx.User.ID)

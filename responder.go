@@ -2,7 +2,6 @@ package astral
 
 import (
 	"github.com/diamondburned/arikawa/v3/discord"
-	"github.com/diamondburned/arikawa/v3/utils/sendpart"
 	"io"
 )
 
@@ -16,7 +15,7 @@ type Responder interface {
 	Reply(text string) (Message, error)
 	Replyf(format string, a ...interface{}) (Message, error)
 	ReplyTo(to discord.UserID, text string) (Message, error)
-	ReplyEmbed(embed *discord.Embed) (Message, error)
+	ReplyEmbed(embed Embed) (Message, error)
 	ReplyFile(name string, r io.Reader) (Message, error)
 	Respond(r Response) (Message, error)
 	Acknowledge() error
@@ -33,4 +32,7 @@ type File struct {
 	Name   string
 	Size   int64
 	Reader io.Reader
+}
+
+type Embed struct {
 }

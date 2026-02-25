@@ -1,9 +1,11 @@
-package astral
+package discord
 
 import (
 	"fmt"
+	"github.com/auroradevllc/astral/v3"
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/diamondburned/arikawa/v3/utils/json/option"
 	"github.com/diamondburned/arikawa/v3/utils/sendpart"
@@ -12,8 +14,9 @@ import (
 )
 
 type InteractionResponder struct {
-	ctx          *Context
+	ctx          *astral.Context
 	State        *state.State
+	Interaction  *gateway.InteractionCreateEvent
 	acknowledged bool
 }
 
@@ -54,7 +57,7 @@ func (m *InteractionResponder) SendFile(name string, r io.Reader) (*discord.Mess
 		},
 	}
 
-	return m.State.SendMessageComplex(m.ctx.Channel.ID, data)
+	return m.State.SendMessageComplex(ChannelID(m.ctx.Channel.ID()), data)
 }
 
 // Replyf Builds a message and replies with formatted text
@@ -73,7 +76,7 @@ func (m *InteractionResponder) Reply(text string) (*discord.Message, error) {
 		return nil, ErrEmptyText
 	}
 
-	err := m.ctx.Session.RespondInteraction(m.ctx.Interaction.ID, m.ctx.Interaction.Token, api.InteractionResponse{
+	err := m.State.RespondInteraction(m.ctx.Interaction.ID, m.ctx.Interaction.Token, api.InteractionResponse{
 		Type: api.MessageInteractionWithSource,
 		Data: &api.InteractionResponseData{Content: option.NewNullableString(text)},
 	})
