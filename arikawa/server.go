@@ -30,7 +30,7 @@ func (s *Server) Channel(id astral.ID) (astral.Channel, error) {
 		return nil, err
 	}
 
-	return NewChannel(channel), nil
+	return NewChannel(s.state, channel), nil
 }
 
 func (s *Server) Emoji(id astral.ID) (astral.Emoji, error) {

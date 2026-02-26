@@ -1,7 +1,6 @@
 package astral
 
 import (
-	"github.com/diamondburned/arikawa/v3/discord"
 	"io"
 )
 
@@ -29,11 +28,11 @@ func (c *Context) Replyf(format string, a ...interface{}) (Message, error) {
 	return c.responder.Replyf(format, a...)
 }
 
-func (c *Context) ReplyTo(to discord.UserID, text string) (Message, error) {
+func (c *Context) ReplyTo(to ID, text string) (Message, error) {
 	return c.responder.ReplyTo(to, text)
 }
 
-func (c *Context) ReplyEmbed(embed *discord.Embed) (Message, error) {
+func (c *Context) ReplyEmbed(embed Embed) (Message, error) {
 	return c.responder.ReplyEmbed(embed)
 }
 

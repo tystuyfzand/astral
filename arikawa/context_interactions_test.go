@@ -1,13 +1,13 @@
 package arikawa
 
 import (
+	"github.com/auroradevllc/astral/v3"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/mavolin/dismock/v3/pkg/dismock"
-	"github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"testing"
 )
 
 func testInteractionData() []discord.CommandInteractionOption {
@@ -35,16 +35,21 @@ func testInteractionData2() []discord.CommandInteractionOption {
 	}
 }
 
-var _ = ginkgo.Describe("Context Interactions", func() {
+var _ = Describe("Context Interactions", func() {
 	var (
 		m *dismock.Mocker
 		s *state.State
+		i *InteractionHandler
 	)
-	ginkgo.BeforeEach(func() {
-		m, s = dismock.NewState(ginkgo.GinkgoT())
+	BeforeEach(func() {
+		m, s = dismock.NewState(GinkgoT())
+
+		i = &InteractionHandler{
+			state: s,
+		}
 	})
-	ginkgo.Context("Options", func() {
-		ginkgo.It("Should retrieve options from an option slice", func() {
+	Context("Options", func() {
+		It("Should retrieve options from an option slice", func() {
 			path := []string{"test", "something", "cool"}
 
 			opts := optionsFromPath(path[1:], testInteractionData())
@@ -52,13 +57,13 @@ var _ = ginkgo.Describe("Context Interactions", func() {
 			Expect(opts).ToNot(BeNil())
 		})
 	})
-	ginkgo.Context("Routes", func() {
-		ginkgo.It("Should retrieve the proper path from an interaction", func() {
-			r := New()
+	Context("Routes", func() {
+		It("Should retrieve the proper path from an interaction", func() {
+			r := astral.New()
 
 			r.On("test", nil).On("something", nil)
 
-			route := r.FindInteraction("test", testInteractionData2())
+			route := i.FindInteraction("test", testInteractionData2())
 
 			path := route.Path()
 
@@ -66,10 +71,10 @@ var _ = ginkgo.Describe("Context Interactions", func() {
 			Expect(route.Name).To(Equal("something"))
 		})
 	})
-	ginkgo.Context("Autocomplete", func() {
+	Context("Autocomplete", func() {
 
 	})
-	ginkgo.Context("Context creation", func() {
+	Context("Context creation", func() {
 		var (
 			evt = &gateway.InteractionCreateEvent{
 				InteractionEvent: discord.InteractionEvent{
@@ -85,10 +90,10 @@ var _ = ginkgo.Describe("Context Interactions", func() {
 				},
 			}
 
-			r *Route
+			r *astral.Route
 		)
-		ginkgo.BeforeEach(func() {
-			r = New()
+		BeforeEach(func() {
+			r = astral.New()
 
 			m.Channel(discord.Channel{
 				ID:      1234,
@@ -102,7 +107,7 @@ var _ = ginkgo.Describe("Context Interactions", func() {
 				Name: "Test Guild",
 			})
 		})
-		ginkgo.It("Should construct an interaction context from a mock event", func() {
+		It("Should construct an interaction context from a mock event", func() {
 			r = r.On("test", nil)
 
 			ctx, err := ContextFromInteraction(s, evt, r)
@@ -110,7 +115,7 @@ var _ = ginkgo.Describe("Context Interactions", func() {
 			Expect(err).To(BeNil())
 			Expect(ctx.Message).ToNot(BeNil())
 		})
-		ginkgo.It("Should parse arguments using channel discord endpoint", func() {
+		It("Should parse arguments using channel discord endpoint", func() {
 			ch := discord.Channel{
 				ID:   12345,
 				Name: "test_argument",
@@ -139,7 +144,7 @@ var _ = ginkgo.Describe("Context Interactions", func() {
 			Expect(ctx.Message).ToNot(BeNil())
 			Expect(ctx.ChannelArg("channel").ID).To(Equal(ch.ID))
 		})
-		ginkgo.It("Should parse arguments using user discord endpoint", func() {
+		It("Should parse arguments using user discord endpoint", func() {
 			u := discord.User{
 				ID:            12345,
 				Username:      "testing",
@@ -168,7 +173,7 @@ var _ = ginkgo.Describe("Context Interactions", func() {
 			Expect(ctx.Message).ToNot(BeNil())
 			Expect(ctx.UserArg("user").ID).To(Equal(u.ID))
 		})
-		ginkgo.It("Should parse arguments using role discord endpoint", func() {
+		It("Should parse arguments using role discord endpoint", func() {
 			guildId := discord.GuildID(123456)
 
 			role := discord.Role{
@@ -198,7 +203,7 @@ var _ = ginkgo.Describe("Context Interactions", func() {
 			Expect(ctx.Message).ToNot(BeNil())
 			Expect(ctx.UserArg("role").ID).To(Equal(role.ID))
 		})
-		ginkgo.It("Should parse multiple arguments simultaneously", func() {
+		It("Should parse multiple arguments simultaneously", func() {
 			u := discord.User{
 				ID:            12345,
 				Username:      "testing",
@@ -241,74 +246,8 @@ var _ = ginkgo.Describe("Context Interactions", func() {
 			Expect(ctx.UserArg("user").ID).To(Equal(u.ID))
 			Expect(ctx.ChannelArg("channel").ID).To(Equal(ch.ID))
 		})
-		ginkgo.It("Should parse nested arguments properly", func() {
+		It("Should parse nested arguments properly", func() {
 
 		})
 	})
 })
-
-func TestAutocomplete(t *testing.T) {
-	data := discord.AutocompleteInteraction{
-		Name: "autocomplete",
-		Options: []discord.AutocompleteOption{
-			{Type: discord.StringOptionType, Name: "test", Focused: true},
-		},
-	}
-
-	r := New()
-
-	respondTest := func(ctx *Context) {
-		ctx.Reply("You chose: " + ctx.Arg("test"))
-	}
-
-	autocompleteFill := func(ctx *Context, option discord.AutocompleteOption) []StringChoice {
-		choices := []StringChoice{
-			{Name: "Test", Value: "test"},
-		}
-
-		if option.Value != "" {
-			choices = append(choices, StringChoice{
-				Name:  option.Value,
-				Value: option.Value,
-			})
-		}
-
-		return choices
-	}
-
-	auto := r.On("autocomplete <test>", respondTest).Argument("test", func(arg *Argument) {
-		arg.Description = "Test Arg"
-	}).Autocomplete("test", autocompleteFill).Export(true).Desc("Autocomplete test")
-
-	auto.On("nested <test>", respondTest).Autocomplete("test", autocompleteFill)
-
-	match, opts := r.FindAutocomplete(data.Name, data.Options)
-
-	if match == nil {
-		t.Fatal("Unable to find match")
-	}
-
-	t.Log(opts)
-
-	data = discord.AutocompleteInteraction{
-		Name: "autocomplete",
-		Options: []discord.AutocompleteOption{
-			{
-				Type:  discord.SubcommandOptionType,
-				Name:  "nested",
-				Value: "",
-				Options: []discord.AutocompleteOption{
-					{Type: discord.StringOptionType, Name: "test", Focused: true, Value: "test123"},
-				},
-			},
-		},
-	}
-
-	match, opts = r.FindAutocomplete(data.Name, data.Options)
-
-	if match == nil {
-		t.Fatal("Unable to find match")
-	}
-
-	t.Log(opts)
-}

@@ -1,8 +1,6 @@
 module github.com/auroradevllc/astral/v3
 
-go 1.23
-
-toolchain go1.24.8
+go 1.26
 
 require (
 	github.com/diamondburned/arikawa/v3 v3.6.0
@@ -11,7 +9,6 @@ require (
 	github.com/onsi/ginkgo/v2 v2.13.2
 	github.com/onsi/gomega v1.30.0
 	github.com/samber/lo v1.39.0
-	github.com/tmdvs/Go-Emoji-Utils v1.1.0
 	golang.org/x/sync v0.10.0
 	golang.org/x/time v0.10.0
 )

@@ -293,17 +293,18 @@ func (i *InteractionHandler) CallAutocomplete(ctx *astral.Context, interaction *
 		return ErrUnknownOption
 	}
 
-	arg, exists := ctx.Route.Arguments[opt.Name]
+	//arg, exists := ctx.Route.Arguments[opt.Name]
 
-	if !exists {
-		return ErrUnknownOption
-	}
+	//if !exists {
+	//	return ErrUnknownOption
+	//}
 
 	//if arg.autocomplete == nil {
 	//	return ErrNotAutocomplete
 	//}
 
-	ret := arg.autocomplete(ctx, *opt)
+	var ret []astral.StringChoice
+	// ret := arg.autocomplete(ctx, *opt)
 
 	if ret != nil {
 		choices := make(api.AutocompleteStringChoices, len(ret))

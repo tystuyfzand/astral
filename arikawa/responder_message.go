@@ -85,8 +85,8 @@ func (m *MessageResponder) Replyf(format string, a ...interface{}) (astral.Messa
 }
 
 // ReplyTo replies to a specific user
-func (m *MessageResponder) ReplyTo(to discord.UserID, text string) (astral.Message, error) {
-	return m.Send(fmt.Sprintf("%s %s", to.Mention(), text))
+func (m *MessageResponder) ReplyTo(to astral.ID, text string) (astral.Message, error) {
+	return m.Send(fmt.Sprintf("%s %s", UserID(to).Mention(), text))
 }
 
 func (m *MessageResponder) checkMessageChannel() error {
@@ -129,7 +129,7 @@ func (m *MessageResponder) ReplyEmbed(embed astral.Embed) (astral.Message, error
 	}
 
 	return nil, nil
-	//return m.ctx.Session.SendEmbedReply(m.ctx.Channel.ID, m.ctx.Message.ID, *embed)
+	//return m.ctx.Client.SendEmbedReply(m.ctx.Channel.ID, m.ctx.Message.ID, *embed)
 }
 
 // ReplyFile replies to a user with a file object

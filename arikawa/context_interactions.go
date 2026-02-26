@@ -1,13 +1,14 @@
 package arikawa
 
 import (
+	"strings"
+	"sync"
+
 	"github.com/auroradevllc/astral/v3"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
 	"golang.org/x/sync/errgroup"
-	"strings"
-	"sync"
 )
 
 // ContextFromInteraction creates a new Context from an interaction event
@@ -26,6 +27,10 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 	}
 
 	ctx := astral.NewContext(r,
+		astral.WithClient(&Client{state: state}),
+		astral.WithServer(NewServer(state, g)),
+		astral.WithChannel(NewChannel(state, c)),
+		astral.WithUser(NewUser(event.User)),
 		astral.WithResponder(&InteractionResponder{
 			state: state,
 		}),

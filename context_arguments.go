@@ -64,7 +64,7 @@ func (c *Context) ConvertArg(arg *Argument, val any) (any, error) {
 
 		// TODO: Values can be int64s/etc
 
-		return c.Session.User(ID(val.(string)))
+		return c.Client.User(ID(val.(string)))
 	case ArgumentTypeChannelMention:
 		m := channelMentionRegexp.FindStringSubmatch(val.(string))
 

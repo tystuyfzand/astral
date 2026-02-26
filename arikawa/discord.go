@@ -1,8 +1,6 @@
 package arikawa
 
 import (
-	"sync"
-
 	"github.com/auroradevllc/astral/v3"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
@@ -31,18 +29,6 @@ func (c *Client) Server(id astral.ID) (astral.Server, error) {
 	}
 
 	return NewServer(c.state, guild), nil
-}
-
-func (c *Client) SendMessage(channel astral.ID, msg string) (astral.Message, error) {
-	channelID := ChannelID(channel)
-
-	m, err := c.state.SendMessage(channelID, msg)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return NewMessage(m), nil
 }
 
 func (c *Client) Interface() any {
@@ -75,6 +61,11 @@ func ContextFrom(state *state.State, event *gateway.MessageCreateEvent, r *astra
 
 	ctx := astral.NewContext(
 		r,
+		astral.WithClient(&Client{state: state}),
+		astral.WithServer(NewServer(state, g)),
+		astral.WithChannel(NewChannel(state, c)),
+		astral.WithUser(NewUser(&event.Author)),
+		astral.WithMessage(NewMessage(&event.Message)),
 		astral.WithResponder(&MessageResponder{
 			event:   event,
 			state:   state,

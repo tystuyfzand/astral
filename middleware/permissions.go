@@ -10,14 +10,14 @@ import (
 func Permission(permission discord.Permissions) astral.MiddlewareFunc {
 	return func(fn astral.Handler) astral.Handler {
 		return func(ctx *astral.Context) {
-			member, err := ctx.Session.Member(ctx.Guild.ID, ctx.User.ID)
+			member, err := ctx.Client.Member(ctx.Guild.ID, ctx.User.ID)
 
 			if err != nil {
 				return
 			}
 
 			if ctx.Guild.Roles == nil {
-				roles, err := ctx.Session.Roles(ctx.Guild.ID)
+				roles, err := ctx.Client.Roles(ctx.Guild.ID)
 
 				if err != nil {
 					return

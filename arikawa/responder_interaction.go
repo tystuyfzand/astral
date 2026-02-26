@@ -74,8 +74,8 @@ func (m *InteractionResponder) Replyf(format string, a ...interface{}) (astral.M
 }
 
 // ReplyTo replies to a specific user
-func (m *InteractionResponder) ReplyTo(to discord.UserID, text string) (astral.Message, error) {
-	return m.Reply(fmt.Sprintf("%s %s", to.Mention(), text))
+func (m *InteractionResponder) ReplyTo(to astral.ID, text string) (astral.Message, error) {
+	return m.Reply(fmt.Sprintf("%s %s", UserID(to).Mention(), text))
 }
 
 // Reply with a user mention
@@ -93,11 +93,11 @@ func (m *InteractionResponder) Reply(text string) (astral.Message, error) {
 }
 
 // ReplyEmbed replies to a user with an embed object
-func (m *InteractionResponder) ReplyEmbed(embed *discord.Embed) (astral.Message, error) {
+func (m *InteractionResponder) ReplyEmbed(embed astral.Embed) (astral.Message, error) {
 	err := m.state.RespondInteraction(m.interaction.ID, m.interaction.Token, api.InteractionResponse{
 		Type: api.MessageInteractionWithSource,
 		Data: &api.InteractionResponseData{
-			Embeds: &[]discord.Embed{*embed},
+			//Embeds: &[]discord.Embed{embed},
 		},
 	})
 

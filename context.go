@@ -12,7 +12,7 @@ type Context struct {
 	*VariableBag
 
 	Route          *Route
-	Session        Client
+	Client         Client
 	Server         Server
 	Channel        Channel
 	Message        Message
@@ -30,6 +30,36 @@ type ContextOption func(*Context)
 func WithResponder(r Responder) ContextOption {
 	return func(ctx *Context) {
 		ctx.responder = r
+	}
+}
+
+func WithClient(c Client) ContextOption {
+	return func(ctx *Context) {
+		ctx.Client = c
+	}
+}
+
+func WithServer(ss Server) ContextOption {
+	return func(ctx *Context) {
+		ctx.Server = ss
+	}
+}
+
+func WithChannel(c Channel) ContextOption {
+	return func(ctx *Context) {
+		ctx.Channel = c
+	}
+}
+
+func WithUser(u User) ContextOption {
+	return func(ctx *Context) {
+		ctx.User = u
+	}
+}
+
+func WithMessage(m Message) ContextOption {
+	return func(ctx *Context) {
+		ctx.Message = m
 	}
 }
 

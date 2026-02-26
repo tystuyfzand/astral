@@ -20,9 +20,6 @@ type Client interface {
 	// Server looks up/retrieves a Server interface wrapper (Guild, Planet, etc)
 	Server(id ID) (Server, error)
 
-	// SendMessage sends a basic text message to the specified channel
-	SendMessage(channel ID, msg string) (Message, error)
-
 	// Interface returns the underlying object backing this client
 	Interface() any
 }
@@ -50,11 +47,20 @@ type Channel interface {
 	ID() ID
 	Name() string
 	Type() ChannelType
+
+	// SendMessage sends a basic text message to the channel
+	SendMessage(msg string) (Message, error)
+
+	// Send sends a Response (a message, but with fields for content, embeds, files) to the channel
+	Send(r Response) (Message, error)
 }
 
 type User interface {
 	ID() ID
 	Name() string
+
+	// Mention returns a formatted message with a "tag" or mention to @user
+	Mention() string
 }
 
 type Emoji interface {

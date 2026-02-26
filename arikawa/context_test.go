@@ -1,25 +1,27 @@
-package astral
+package arikawa
 
 import (
+	"strings"
+
+	"github.com/auroradevllc/astral/v3"
 	"github.com/auroradevllc/astral/v3/arguments"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/mavolin/dismock/v3/pkg/dismock"
-	"github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"strings"
 )
 
-var _ = ginkgo.Describe("Contexts", func() {
+var _ = Describe("Contexts", func() {
 	var (
 		m *dismock.Mocker
 		s *state.State
 	)
-	ginkgo.BeforeEach(func() {
-		m, s = dismock.NewState(ginkgo.GinkgoT())
+	BeforeEach(func() {
+		m, s = dismock.NewState(GinkgoT())
 	})
-	ginkgo.Context("Message contexts", func() {
+	Context("Message contexts", func() {
 		var (
 			evt = &gateway.MessageCreateEvent{
 				Message: discord.Message{
@@ -27,10 +29,10 @@ var _ = ginkgo.Describe("Contexts", func() {
 				},
 			}
 
-			r *Route
+			r *astral.Route
 		)
-		ginkgo.BeforeEach(func() {
-			r = New()
+		BeforeEach(func() {
+			r = astral.New()
 
 			m.Channel(discord.Channel{
 				ID:      1234,
@@ -44,7 +46,7 @@ var _ = ginkgo.Describe("Contexts", func() {
 				Name: "Test Guild",
 			})
 		})
-		ginkgo.It("Should construct a message context from a mock event", func() {
+		It("Should construct a message context from a mock event", func() {
 			r = r.On("test", nil)
 
 			ctx, err := ContextFrom(s, evt, r, []string{""})
@@ -52,7 +54,7 @@ var _ = ginkgo.Describe("Contexts", func() {
 			Expect(err).To(BeNil())
 			Expect(ctx.Message).ToNot(BeNil())
 		})
-		ginkgo.It("Should parse arguments using channel discord endpoint", func() {
+		It("Should parse arguments using channel discord endpoint", func() {
 			ch := discord.Channel{
 				ID:   12345,
 				Name: "test_argument",
@@ -67,9 +69,9 @@ var _ = ginkgo.Describe("Contexts", func() {
 
 			Expect(err).To(BeNil())
 			Expect(ctx.Message).ToNot(BeNil())
-			Expect(ctx.ChannelArg("channel").ID).To(Equal(ch.ID))
+			Expect(string(ctx.ChannelArg("channel").ID())).To(Equal(ch.ID.String()))
 		})
-		ginkgo.It("Should parse arguments using user discord endpoint", func() {
+		It("Should parse arguments using user discord endpoint", func() {
 			u := discord.User{
 				ID:            12345,
 				Username:      "testing",
@@ -84,9 +86,9 @@ var _ = ginkgo.Describe("Contexts", func() {
 
 			Expect(err).To(BeNil())
 			Expect(ctx.Message).ToNot(BeNil())
-			Expect(ctx.UserArg("user").ID).To(Equal(u.ID))
+			Expect(string(ctx.UserArg("user").ID())).To(Equal(u.ID.String()))
 		})
-		ginkgo.It("Should parse multiple arguments simultaneously", func() {
+		It("Should parse multiple arguments simultaneously", func() {
 			u := discord.User{
 				ID:            12345,
 				Username:      "testing",
@@ -108,15 +110,15 @@ var _ = ginkgo.Describe("Contexts", func() {
 
 			Expect(err).To(BeNil())
 			Expect(ctx.Message).ToNot(BeNil())
-			Expect(ctx.UserArg("user").ID).To(Equal(u.ID))
-			Expect(ctx.ChannelArg("channel").ID).To(Equal(ch.ID))
+			Expect(string(ctx.UserArg("user").ID())).To(Equal(u.ID.String()))
+			Expect(string(ctx.ChannelArg("channel").ID())).To(Equal(ch.ID.String()))
 		})
 
-		ginkgo.Context("Parsing", func() {
-			ginkgo.It("Should correctly parse arguments with spaces/subcommands", func() {
+		Context("Parsing", func() {
+			It("Should correctly parse arguments with spaces/subcommands", func() {
 				str := "test arguments with spaces and subcommands"
 
-				r.On("test", nil).On("arguments", func(ctx *Context) {
+				r.On("test", nil).On("arguments", func(ctx *astral.Context) {
 					// Nothing
 				})
 
