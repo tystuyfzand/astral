@@ -94,14 +94,6 @@ func (r *Route) Autocomplete(name string, f AutocompleteHandler) *Route {
 	return r
 }
 
-func (r *Route) AutocompleteHandler(name string) (AutocompleteHandler, bool) {
-	if arg, ok := r.Arguments[name]; ok {
-		return arg.autocomplete, true
-	}
-
-	return nil, false
-}
-
 // Add adds a sub route to this route.
 func (r *Route) Add(n *Route) *Route {
 	n.parent = r
