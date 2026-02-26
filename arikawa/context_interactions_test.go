@@ -40,12 +40,16 @@ var _ = Describe("Context Interactions", func() {
 		m *dismock.Mocker
 		s *state.State
 		i *InteractionHandler
+		r *astral.Route
 	)
 	BeforeEach(func() {
+		r = astral.New()
+
 		m, s = dismock.NewState(GinkgoT())
 
 		i = &InteractionHandler{
-			state: s,
+			state:  s,
+			parent: r,
 		}
 	})
 	Context("Options", func() {
@@ -59,8 +63,6 @@ var _ = Describe("Context Interactions", func() {
 	})
 	Context("Routes", func() {
 		It("Should retrieve the proper path from an interaction", func() {
-			r := astral.New()
-
 			r.On("test", nil).On("something", nil)
 
 			route := i.FindInteraction("test", testInteractionData2())
@@ -72,7 +74,68 @@ var _ = Describe("Context Interactions", func() {
 		})
 	})
 	Context("Autocomplete", func() {
+		var (
+			data discord.AutocompleteInteraction
+		)
+		BeforeEach(func() {
+			respondTest := func(ctx *astral.Context) {
+				ctx.Reply("You chose: " + ctx.Arg("test"))
+			}
 
+			autocompleteFill := func(ctx *astral.Context, option astral.AutocompleteOption) []astral.StringChoice {
+				choices := []astral.StringChoice{
+					{Name: "Test", Value: "test"},
+				}
+
+				if option.Value != "" {
+					choices = append(choices, astral.StringChoice{
+						Name:  option.Value,
+						Value: option.Value,
+					})
+				}
+
+				return choices
+			}
+
+			auto := r.On("autocomplete <test>", respondTest).Argument("test", func(arg *astral.Argument) {
+				arg.Description = "Test Arg"
+			}).Autocomplete("test", autocompleteFill).Export(true).Desc("Autocomplete test")
+
+			auto.On("nested <test>", respondTest).Autocomplete("test", autocompleteFill)
+		})
+		It("Should successfully match a base autocomplete route", func() {
+			data = discord.AutocompleteInteraction{
+				Name: "autocomplete",
+				Options: []discord.AutocompleteOption{
+					{Type: discord.StringOptionType, Name: "test", Focused: true},
+				},
+			}
+
+			match, opts := i.FindAutocomplete(data.Name, data.Options)
+
+			Expect(match).ToNot(BeNil())
+			Expect(opts).ToNot(BeEmpty())
+		})
+		It("Should successfully match a nested autocomplete route", func() {
+			data = discord.AutocompleteInteraction{
+				Name: "autocomplete",
+				Options: []discord.AutocompleteOption{
+					{
+						Type:  discord.SubcommandOptionType,
+						Name:  "nested",
+						Value: []byte(`""`),
+						Options: []discord.AutocompleteOption{
+							{Type: discord.StringOptionType, Name: "test", Focused: true, Value: []byte(`"test123"`)},
+						},
+					},
+				},
+			}
+
+			match, opts := i.FindAutocomplete(data.Name, data.Options)
+
+			Expect(match).ToNot(BeNil())
+			Expect(opts).ToNot(BeEmpty())
+		})
 	})
 	Context("Context creation", func() {
 		var (

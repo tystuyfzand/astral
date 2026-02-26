@@ -40,12 +40,12 @@ func main() {
 
 	s := state.NewWithIntents("Bot "+*flagToken, intents...)
 
-	i := arikawa.NewInteractionHandler(s, discord.AppID(*flagAppID))
+	route = astral.New()
+
+	i := arikawa.NewInteractionHandler(s, discord.AppID(*flagAppID), route)
 
 	s.AddHandler(messageCreateHandler(s))
 	s.AddHandler(interactionHandler(s, i))
-
-	route = astral.New()
 
 	ping := route.On("ping", func(ctx *astral.Context) {
 		ctx.Reply("pong!")
@@ -100,18 +100,10 @@ func main() {
 		ctx.Reply("You chose: " + ctx.Arg("test"))
 	}).Argument("test", func(arg *astral.Argument) {
 		arg.Description = "Test Arg"
-	}).Autocomplete("test", func(ctx *astral.Context, option discord.AutocompleteOption) []astral.StringChoice {
+	}).Autocomplete("test", func(ctx *astral.Context, option astral.AutocompleteOption) []astral.StringChoice {
 		choices := []astral.StringChoice{
 			{Name: "Test", Value: "test"},
 		}
-
-		// TODO: Arikawa updated this option field
-		//if option.Value != "" {
-		//	choices = append(choices, astral.StringChoice{
-		//		Name:  option.Value,
-		//		Value: option.Value,
-		//	})
-		//}
 
 		return choices
 	}).Export(true).Desc("Autocomplete test")
@@ -125,11 +117,9 @@ func main() {
 	log.Println("Ready.")
 
 	if *flagGuildID != 0 {
-		h := arikawa.NewInteractionHandler(s, discord.AppID(*flagAppID))
-
 		log.Println("Registering guild commands")
 
-		cmds, err := h.RegisterGuildCommands(route, discord.GuildID(*flagGuildID))
+		cmds, err := i.RegisterGuildCommands(route, discord.GuildID(*flagGuildID))
 
 		if err != nil {
 			log.Fatalln(err)

@@ -58,10 +58,11 @@ func (e argTypeError) Error() string {
 	return "invalid argument type for " + strings.Join(e.route.Path(), "->") + " arg " + e.arg.Name + ": " + strconv.Itoa(int(e.arg.Type))
 }
 
-func NewInteractionHandler(state *state.State, appID discord.AppID) *InteractionHandler {
+func NewInteractionHandler(state *state.State, appID discord.AppID, parent *astral.Route) *InteractionHandler {
 	return &InteractionHandler{
-		state: state,
-		appID: appID,
+		state:  state,
+		appID:  appID,
+		parent: parent,
 	}
 }
 
@@ -207,9 +208,9 @@ func (i *InteractionHandler) argsFromRoute(r *astral.Route) ([]discord.CommandOp
 				Description: arg.Description,
 			}
 
-			//if arg.autocomplete != nil {
-			//	opt.Autocomplete = true
-			//}
+			if arg.HasAutocomplete() {
+				opt.Autocomplete = true
+			}
 
 			if len(arg.Choices) > 0 {
 				opt.Choices = i.integerChoices(arg)
@@ -223,9 +224,9 @@ func (i *InteractionHandler) argsFromRoute(r *astral.Route) ([]discord.CommandOp
 				Description: arg.Description,
 			}
 
-			//if arg.autocomplete != nil {
-			//	opt.Autocomplete = true
-			//}
+			if arg.HasAutocomplete() {
+				opt.Autocomplete = true
+			}
 
 			if len(arg.Choices) > 0 {
 				opt.Choices = i.numberChoices(arg)
@@ -263,9 +264,9 @@ func (i *InteractionHandler) argsFromRoute(r *astral.Route) ([]discord.CommandOp
 				Description: arg.Description,
 			}
 
-			//if arg.autocomplete != nil {
-			//	opt.Autocomplete = true
-			//}
+			if arg.HasAutocomplete() {
+				opt.Autocomplete = true
+			}
 
 			if len(arg.Choices) > 0 {
 				opt.Choices = i.stringChoices(arg)
@@ -293,18 +294,52 @@ func (i *InteractionHandler) CallAutocomplete(ctx *astral.Context, interaction *
 		return ErrUnknownOption
 	}
 
-	//arg, exists := ctx.Route.Arguments[opt.Name]
+	arg, exists := ctx.Route.Arguments[opt.Name]
 
-	//if !exists {
-	//	return ErrUnknownOption
-	//}
+	if !exists {
+		return ErrUnknownOption
+	}
 
-	//if arg.autocomplete == nil {
-	//	return ErrNotAutocomplete
-	//}
+	if !arg.HasAutocomplete() {
+		return ErrNotAutocomplete
+	}
 
-	var ret []astral.StringChoice
-	// ret := arg.autocomplete(ctx, *opt)
+	var val string
+
+	// This may not be correct, verify?
+	switch opt.Type {
+	case discord.StringOptionType:
+		val = opt.String()
+	case discord.IntegerOptionType:
+		i, err := opt.IntValue()
+
+		if err != nil {
+			return err
+		}
+
+		val = strconv.FormatInt(i, 10)
+	case discord.BooleanOptionType:
+		b, err := opt.BoolValue()
+
+		if err != nil {
+			return err
+		}
+
+		val = strconv.FormatBool(b)
+	case discord.NumberOptionType:
+		i, err := opt.FloatValue()
+
+		if err != nil {
+			return err
+		}
+
+		val = strconv.FormatFloat(i, 'f', -1, 64)
+	}
+
+	ret := arg.CallAutocomplete(ctx, astral.AutocompleteOption{
+		Name:  opt.Name,
+		Value: val,
+	})
 
 	if ret != nil {
 		choices := make(api.AutocompleteStringChoices, len(ret))
@@ -336,12 +371,6 @@ func focusedOption(options []discord.AutocompleteOption) *discord.AutocompleteOp
 
 	return nil
 }
-
-// Autocomplete registers an autocomplete handler for this argument
-//func (i *InteractionHandler) Autocomplete(f AutocompleteHandler) *Argument {
-//	a.autocomplete = f
-//	return a
-//}
 
 func (i *InteractionHandler) integerChoices(a *astral.Argument) []discord.IntegerChoice {
 	choices := make([]discord.IntegerChoice, len(a.Choices))
