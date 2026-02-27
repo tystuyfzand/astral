@@ -8,6 +8,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/session/shard"
 	"github.com/diamondburned/arikawa/v3/state"
+	"github.com/samber/lo"
 )
 
 type ShardedClient struct {
@@ -36,6 +37,24 @@ func (c *ShardedClient) Server(id astral.ServerID) (astral.Server, error) {
 	}
 
 	return NewServer(currentShard, guild), nil
+}
+
+func (c *ShardedClient) Servers() ([]astral.Server, error) {
+	var servers []astral.Server
+
+	c.ForEach(func(s *state.State) {
+		guilds, err := s.Guilds()
+
+		if err != nil {
+			return
+		}
+
+		servers = append(servers, lo.Map(guilds, func(i discord.Guild, _ int) astral.Server {
+			return NewServer(s, &i)
+		})...)
+	})
+
+	return servers, nil
 }
 
 func (c *ShardedClient) Interface() any {

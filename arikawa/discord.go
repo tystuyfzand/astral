@@ -17,6 +17,22 @@ type Client struct {
 	state *state.State
 }
 
+func (c *Client) Servers() ([]astral.Server, error) {
+	guilds, err := c.state.Guilds()
+
+	if err != nil {
+		return nil, err
+	}
+
+	servers := make([]astral.Server, len(guilds))
+
+	for i, guild := range guilds {
+		servers[i] = NewServer(c.state, &guild)
+	}
+
+	return servers, nil
+}
+
 func (c *Client) User(id astral.UserID) (astral.User, error) {
 	user, err := c.state.User(UserID(id))
 
