@@ -102,12 +102,14 @@ func (r *Route) Add(n *Route) *Route {
 }
 
 // Desc sets this route's description
+// See also WithDescription
 func (r *Route) Desc(description string) *Route {
 	r.Description = description
 	return r
 }
 
 // Alias adds an alias to the parent route for the current route.
+// See also WithAliases
 func (r *Route) Alias(alias string) *Route {
 	if r.parent != nil {
 		r.parent.aliases[alias] = r.Name
@@ -134,12 +136,17 @@ func (r *Route) IsExported() bool {
 // <> means an argument will be required, [] says it's optional
 // As well as required and optional types, you can use # and @ to signify
 // That routes must match a valid user or channel.
-func (r *Route) On(signature string, f Handler) *Route {
+func (r *Route) On(signature string, f Handler, opts ...RouteOption) *Route {
 	rt := New()
 	rt.parent = r
 	rt.handler = f
 	rt.export = r.export
 	parseSignature(rt, signature)
+
+	for _, opt := range opts {
+		opt(rt)
+	}
+
 	r.routes[rt.Name] = rt.Use(r.middleware...)
 	return rt
 }

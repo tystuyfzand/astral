@@ -13,12 +13,18 @@ import (
 	"github.com/diamondburned/arikawa/v3/utils/sendpart"
 )
 
+func NewInteractionResponder(ctx *astral.Context, state *state.State, interaction discord.InteractionEvent) *InteractionResponder {
+	return &InteractionResponder{
+		ctx:         ctx,
+		state:       state,
+		interaction: interaction,
+	}
+}
+
 type InteractionResponder struct {
 	ctx          *astral.Context
 	state        *state.State
 	interaction  discord.InteractionEvent
-	channel      *discord.Channel
-	user         *discord.User
 	acknowledged bool
 }
 
@@ -37,10 +43,6 @@ func (m *InteractionResponder) Usage(usage ...string) (astral.Message, error) {
 func (m *InteractionResponder) Send(text string) (astral.Message, error) {
 	if text == "" {
 		return nil, ErrEmptyText
-	}
-
-	if err := m.checkMessageChannel(); err != nil {
-		return nil, err
 	}
 
 	return m.Reply(text)
@@ -195,18 +197,4 @@ func (m *InteractionResponder) Acknowledge() error {
 	}
 
 	return err
-}
-
-func (m *InteractionResponder) checkMessageChannel() error {
-	if m.channel.Type == discord.DirectMessage {
-		var err error
-
-		m.channel, err = m.state.CreatePrivateChannel(m.user.ID)
-
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

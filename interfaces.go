@@ -2,6 +2,12 @@ package astral
 
 type ID string
 
+const NullID = ID("")
+
+func (id ID) IsValid() bool {
+	return id != ""
+}
+
 type ChannelType int
 
 const (

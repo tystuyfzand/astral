@@ -26,15 +26,16 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 		return nil, err
 	}
 
-	ctx := astral.NewContext(r,
-		astral.WithClient(&Client{state: state}),
-		astral.WithServer(NewServer(state, g)),
-		astral.WithChannel(NewChannel(state, c)),
-		astral.WithUser(NewUser(event.User)),
-		astral.WithResponder(&InteractionResponder{
-			state: state,
-		}),
-	)
+	ctx := astral.NewContext(astral.ContextOptions{
+		Route:   r,
+		Client:  NewClient(state),
+		Server:  NewServer(state, g),
+		Channel: NewChannel(state, c),
+		User:    NewUser(event.User),
+	})
+
+	// Need a ctx first
+	ctx.SetResponder(NewInteractionResponder(ctx, state, event.InteractionEvent))
 
 	switch data := event.Data.(type) {
 	case *discord.CommandInteraction:

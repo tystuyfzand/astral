@@ -27,46 +27,33 @@ type Context struct {
 
 type ContextOption func(*Context)
 
-func WithResponder(r Responder) ContextOption {
+func WithArgumentString(argumentString string) ContextOption {
 	return func(ctx *Context) {
-		ctx.responder = r
+		ctx.ParseArguments()
 	}
 }
 
-func WithClient(c Client) ContextOption {
-	return func(ctx *Context) {
-		ctx.Client = c
-	}
+type ContextOptions struct {
+	Route     *Route
+	Client    Client
+	Server    Server
+	Channel   Channel
+	User      User
+	Message   Message
+	Responder Responder
 }
 
-func WithServer(ss Server) ContextOption {
-	return func(ctx *Context) {
-		ctx.Server = ss
-	}
-}
-
-func WithChannel(c Channel) ContextOption {
-	return func(ctx *Context) {
-		ctx.Channel = c
-	}
-}
-
-func WithUser(u User) ContextOption {
-	return func(ctx *Context) {
-		ctx.User = u
-	}
-}
-
-func WithMessage(m Message) ContextOption {
-	return func(ctx *Context) {
-		ctx.Message = m
-	}
-}
-
-func NewContext(route *Route, opt ...ContextOption) *Context {
+// NewContext creates a new context with the specified options
+func NewContext(opts ContextOptions, opt ...ContextOption) *Context {
 	c := &Context{
 		VariableBag: NewVariableBag(),
-		Route:       route,
+		Route:       opts.Route,
+		Client:      opts.Client,
+		Server:      opts.Server,
+		Channel:     opts.Channel,
+		Message:     opts.Message,
+		User:        opts.User,
+		responder:   opts.Responder,
 	}
 
 	for _, opt := range opt {

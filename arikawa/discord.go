@@ -7,6 +7,12 @@ import (
 	"github.com/diamondburned/arikawa/v3/state"
 )
 
+func NewClient(state *state.State) *Client {
+	return &Client{
+		state: state,
+	}
+}
+
 type Client struct {
 	state *state.State
 }
@@ -59,21 +65,21 @@ func ContextFrom(state *state.State, event *gateway.MessageCreateEvent, r *astra
 		}
 	}
 
-	ctx := astral.NewContext(
-		r,
-		astral.WithClient(&Client{state: state}),
-		astral.WithServer(NewServer(state, g)),
-		astral.WithChannel(NewChannel(state, c)),
-		astral.WithUser(NewUser(&event.Author)),
-		astral.WithMessage(NewMessage(&event.Message)),
-		astral.WithResponder(&MessageResponder{
+	ctx := astral.NewContext(astral.ContextOptions{
+		Route:   r,
+		Client:  &Client{state: state},
+		Server:  NewServer(state, g),
+		Channel: NewChannel(state, c),
+		User:    NewUser(&event.Author),
+		Message: NewMessage(&event.Message),
+		Responder: &MessageResponder{
 			event:   event,
 			state:   state,
 			channel: c,
 			user:    event.Author,
 			message: event.Message,
-		}),
-	)
+		},
+	})
 
 	if err := ctx.ParseArguments(args); err != nil {
 		return nil, err
