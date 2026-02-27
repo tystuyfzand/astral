@@ -13,8 +13,8 @@ type User struct {
 	*discord.User
 }
 
-func (u *User) ID() astral.ID {
-	return astral.ID(u.User.ID.String())
+func (u *User) ID() astral.UserID {
+	return astral.UserID(u.User.ID.String())
 }
 
 func (u *User) Name() string {
@@ -29,8 +29,8 @@ func NewRole(r *discord.Role) *Role {
 	return &Role{Role: r}
 }
 
-func (r *Role) ID() astral.ID {
-	return astral.ID(r.Role.ID.String())
+func (r *Role) ID() astral.RoleID {
+	return astral.RoleID(r.Role.ID.String())
 }
 
 func (r *Role) Name() string {

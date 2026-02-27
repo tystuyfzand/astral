@@ -5,6 +5,7 @@ import (
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/state"
+	"github.com/diamondburned/arikawa/v3/utils/json/option"
 	"github.com/diamondburned/arikawa/v3/utils/sendpart"
 )
 
@@ -23,7 +24,7 @@ func (c *Channel) SendMessage(msg string) (astral.Message, error) {
 	return NewMessage(m), nil
 }
 
-func (c *Channel) Send(r astral.Response) (astral.Message, error) {
+func (c *Channel) Send(r astral.MessageContent) (astral.Message, error) {
 	var files []sendpart.File
 
 	if len(r.Files) > 0 {
@@ -61,8 +62,8 @@ func NewChannel(state *state.State, c *discord.Channel) *Channel {
 	}
 }
 
-func (c *Channel) ID() astral.ID {
-	return astral.ID(c.Channel.ID.String())
+func (c *Channel) ID() astral.ChannelID {
+	return astral.ChannelID(c.Channel.ID.String())
 }
 
 func (c *Channel) Name() string {
@@ -80,4 +81,20 @@ func (c *Channel) Type() astral.ChannelType {
 	}
 
 	return astral.ChannelTypeUnknown
+}
+
+func (c *Channel) EditMessage(id astral.MessageID, msg astral.MessageContent) (astral.Message, error) {
+	editData := api.EditMessageData{}
+
+	if msg.Content != "" {
+		editData.Content = option.NewNullableString(msg.Content)
+	}
+
+	m, err := c.state.EditMessageComplex(c.Channel.ID, MessageID(id), editData)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return NewMessage(m), nil
 }

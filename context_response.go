@@ -28,7 +28,7 @@ func (c *Context) Replyf(format string, a ...interface{}) (Message, error) {
 	return c.responder.Replyf(format, a...)
 }
 
-func (c *Context) ReplyTo(to ID, text string) (Message, error) {
+func (c *Context) ReplyTo(to UserID, text string) (Message, error) {
 	return c.responder.ReplyTo(to, text)
 }
 
@@ -40,7 +40,7 @@ func (c *Context) ReplyFile(name string, r io.Reader) (Message, error) {
 	return c.responder.ReplyFile(name, r)
 }
 
-func (c *Context) Respond(r Response) (Message, error) {
+func (c *Context) Respond(r MessageContent) (Message, error) {
 	return c.responder.Respond(r)
 }
 

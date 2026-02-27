@@ -15,10 +15,10 @@ type Responder interface {
 	SendFile(name string, r io.Reader) (Message, error)
 	Reply(text string) (Message, error)
 	Replyf(format string, a ...interface{}) (Message, error)
-	ReplyTo(to ID, text string) (Message, error)
+	ReplyTo(to UserID, text string) (Message, error)
 	ReplyEmbed(embed Embed) (Message, error)
 	ReplyFile(name string, r io.Reader) (Message, error)
-	Respond(r Response) (Message, error)
+	Respond(r MessageContent) (Message, error)
 	Acknowledge() error
 	Error(message string) error
 }
@@ -49,7 +49,7 @@ func (r *DefaultResponder) Sendf(format string, a ...interface{}) (Message, erro
 }
 
 func (r *DefaultResponder) SendFile(name string, reader io.Reader) (Message, error) {
-	return r.Respond(Response{
+	return r.Respond(MessageContent{
 		Files: []File{
 			{
 				Name:   name,
@@ -67,7 +67,7 @@ func (r *DefaultResponder) Replyf(format string, a ...interface{}) (Message, err
 	return r.Reply(fmt.Sprintf(format, a...))
 }
 
-func (r *DefaultResponder) ReplyTo(to ID, text string) (Message, error) {
+func (r *DefaultResponder) ReplyTo(to UserID, text string) (Message, error) {
 	user, err := r.client.User(to)
 
 	if err != nil {
@@ -83,7 +83,7 @@ func (r *DefaultResponder) ReplyEmbed(embed Embed) (Message, error) {
 }
 
 func (r *DefaultResponder) ReplyFile(name string, reader io.Reader) (Message, error) {
-	return r.Respond(Response{
+	return r.Respond(MessageContent{
 		Content: r.user.Mention(),
 		Files: []File{
 			{Name: name, Reader: reader},
@@ -91,7 +91,7 @@ func (r *DefaultResponder) ReplyFile(name string, reader io.Reader) (Message, er
 	})
 }
 
-func (r *DefaultResponder) Respond(res Response) (Message, error) {
+func (r *DefaultResponder) Respond(res MessageContent) (Message, error) {
 	return r.channel.Send(res)
 }
 

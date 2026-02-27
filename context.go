@@ -27,12 +27,6 @@ type Context struct {
 
 type ContextOption func(*Context)
 
-func WithArgumentString(argumentString string) ContextOption {
-	return func(ctx *Context) {
-		ctx.ParseArguments()
-	}
-}
-
 type ContextOptions struct {
 	Route     *Route
 	Client    Client

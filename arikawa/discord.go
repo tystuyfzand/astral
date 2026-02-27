@@ -17,7 +17,7 @@ type Client struct {
 	state *state.State
 }
 
-func (c *Client) User(id astral.ID) (astral.User, error) {
+func (c *Client) User(id astral.UserID) (astral.User, error) {
 	user, err := c.state.User(UserID(id))
 
 	if err != nil {
@@ -27,7 +27,7 @@ func (c *Client) User(id astral.ID) (astral.User, error) {
 	return NewUser(user), nil
 }
 
-func (c *Client) Server(id astral.ID) (astral.Server, error) {
+func (c *Client) Server(id astral.ServerID) (astral.Server, error) {
 	guild, err := c.state.Guild(GuildID(id))
 
 	if err != nil {

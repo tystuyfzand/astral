@@ -5,12 +5,8 @@ import (
 	"github.com/diamondburned/arikawa/v3/discord"
 )
 
-func Snowflake(id astral.ID) (discord.Snowflake, error) {
-	return discord.ParseSnowflake(string(id))
-}
-
-func GuildID(id astral.ID) discord.GuildID {
-	sf, err := Snowflake(id)
+func GuildID(id astral.ServerID) discord.GuildID {
+	sf, err := discord.ParseSnowflake(string(id))
 
 	if err != nil {
 		return discord.NullGuildID
@@ -19,8 +15,8 @@ func GuildID(id astral.ID) discord.GuildID {
 	return discord.GuildID(sf)
 }
 
-func ChannelID(id astral.ID) discord.ChannelID {
-	sf, err := Snowflake(id)
+func ChannelID(id astral.ChannelID) discord.ChannelID {
+	sf, err := discord.ParseSnowflake(string(id))
 
 	if err != nil {
 		return discord.NullChannelID
@@ -29,8 +25,8 @@ func ChannelID(id astral.ID) discord.ChannelID {
 	return discord.ChannelID(sf)
 }
 
-func UserID(id astral.ID) discord.UserID {
-	sf, err := Snowflake(id)
+func UserID(id astral.UserID) discord.UserID {
+	sf, err := discord.ParseSnowflake(string(id))
 
 	if err != nil {
 		return discord.NullUserID
@@ -39,12 +35,22 @@ func UserID(id astral.ID) discord.UserID {
 	return discord.UserID(sf)
 }
 
-func RoleID(id astral.ID) discord.RoleID {
-	sf, err := Snowflake(id)
+func RoleID(id astral.RoleID) discord.RoleID {
+	sf, err := discord.ParseSnowflake(string(id))
 
 	if err != nil {
 		return discord.NullRoleID
 	}
 
 	return discord.RoleID(sf)
+}
+
+func MessageID(id astral.MessageID) discord.MessageID {
+	sf, err := discord.ParseSnowflake(string(id))
+
+	if err != nil {
+		return discord.NullMessageID
+	}
+
+	return discord.MessageID(sf)
 }

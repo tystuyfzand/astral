@@ -4,7 +4,7 @@ import (
 	"io"
 )
 
-type Response struct {
+type MessageContent struct {
 	Content string
 	Embeds  []Embed
 	Files   []File

@@ -1,13 +1,5 @@
 package astral
 
-type ID string
-
-const NullID = ID("")
-
-func (id ID) IsValid() bool {
-	return id != ""
-}
-
 type ChannelType int
 
 const (
@@ -21,48 +13,51 @@ const (
 
 type Client interface {
 	// User looks up/retrieves a User interface wrapper
-	User(id ID) (User, error)
+	User(id UserID) (User, error)
 
 	// Server looks up/retrieves a Server interface wrapper (Guild, Planet, etc)
-	Server(id ID) (Server, error)
+	Server(id ServerID) (Server, error)
 
 	// Interface returns the underlying object backing this client
 	Interface() any
 }
 
 type Message interface {
+	ID() MessageID
 	Content() string
 }
 
 type Server interface {
-	ID() ID
+	ID() ServerID
 	Name() string
-	OwnerID() ID
+	OwnerID() UserID
 
 	// Channel looks up/retrieves a Channel interface wrapper
-	Channel(id ID) (Channel, error)
+	Channel(id ChannelID) (Channel, error)
 
 	// Emoji looks up/retrieves either an Emoji (built-in) or custom emoji
-	Emoji(id ID) (Emoji, error)
+	Emoji(id EmojiID) (Emoji, error)
 
 	// Role looks up/retrieves a Role object
-	Role(id ID) (Role, error)
+	Role(id RoleID) (Role, error)
 }
 
 type Channel interface {
-	ID() ID
+	ID() ChannelID
 	Name() string
 	Type() ChannelType
 
 	// SendMessage sends a basic text message to the channel
 	SendMessage(msg string) (Message, error)
 
-	// Send sends a Response (a message, but with fields for content, embeds, files) to the channel
-	Send(r Response) (Message, error)
+	// Send sends a MessageContent (a message, but with fields for content, embeds, files) to the channel
+	Send(r MessageContent) (Message, error)
+
+	EditMessage(id MessageID, msg MessageContent) (Message, error)
 }
 
 type User interface {
-	ID() ID
+	ID() UserID
 	Name() string
 
 	// Mention returns a formatted message with a "tag" or mention to @user
@@ -70,12 +65,12 @@ type User interface {
 }
 
 type Emoji interface {
-	ID() ID
+	ID() EmojiID
 	Name() string
 	IsAnimated() bool
 }
 
 type Role interface {
-	ID() ID
+	ID() RoleID
 	Name() string
 }

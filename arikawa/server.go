@@ -11,19 +11,19 @@ type Server struct {
 	state *state.State
 }
 
-func (s *Server) ID() astral.ID {
-	return astral.ID(s.Guild.ID.String())
+func (s *Server) ID() astral.ServerID {
+	return astral.ServerID(s.Guild.ID.String())
 }
 
 func (s *Server) Name() string {
 	return s.Guild.Name
 }
 
-func (s *Server) OwnerID() astral.ID {
-	return astral.ID(s.Guild.OwnerID.String())
+func (s *Server) OwnerID() astral.UserID {
+	return astral.UserID(s.Guild.OwnerID.String())
 }
 
-func (s *Server) Channel(id astral.ID) (astral.Channel, error) {
+func (s *Server) Channel(id astral.ChannelID) (astral.Channel, error) {
 	channel, err := s.state.Channel(ChannelID(id))
 
 	if err != nil {
@@ -33,12 +33,12 @@ func (s *Server) Channel(id astral.ID) (astral.Channel, error) {
 	return NewChannel(s.state, channel), nil
 }
 
-func (s *Server) Emoji(id astral.ID) (astral.Emoji, error) {
+func (s *Server) Emoji(id astral.EmojiID) (astral.Emoji, error) {
 	//TODO implement me
 	panic("implement me")
 }
 
-func (s *Server) Role(id astral.ID) (astral.Role, error) {
+func (s *Server) Role(id astral.RoleID) (astral.Role, error) {
 	role, err := s.state.Role(s.Guild.ID, RoleID(id))
 
 	if err != nil {

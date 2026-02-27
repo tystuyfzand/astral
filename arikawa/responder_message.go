@@ -85,7 +85,7 @@ func (m *MessageResponder) Replyf(format string, a ...interface{}) (astral.Messa
 }
 
 // ReplyTo replies to a specific user
-func (m *MessageResponder) ReplyTo(to astral.ID, text string) (astral.Message, error) {
+func (m *MessageResponder) ReplyTo(to astral.UserID, text string) (astral.Message, error) {
 	return m.Send(fmt.Sprintf("%s %s", UserID(to).Mention(), text))
 }
 
@@ -155,8 +155,8 @@ func (m *MessageResponder) ReplyFile(name string, r io.Reader) (astral.Message, 
 	return NewMessage(msg), nil
 }
 
-// Respond replies to a user by serializing Response
-func (m *MessageResponder) Respond(r astral.Response) (astral.Message, error) {
+// Respond replies to a user by serializing MessageContent
+func (m *MessageResponder) Respond(r astral.MessageContent) (astral.Message, error) {
 	var files []sendpart.File
 
 	if len(r.Files) > 0 {

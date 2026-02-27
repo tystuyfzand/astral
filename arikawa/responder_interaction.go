@@ -76,7 +76,7 @@ func (m *InteractionResponder) Replyf(format string, a ...interface{}) (astral.M
 }
 
 // ReplyTo replies to a specific user
-func (m *InteractionResponder) ReplyTo(to astral.ID, text string) (astral.Message, error) {
+func (m *InteractionResponder) ReplyTo(to astral.UserID, text string) (astral.Message, error) {
 	return m.Reply(fmt.Sprintf("%s %s", UserID(to).Mention(), text))
 }
 
@@ -120,8 +120,8 @@ func (m *InteractionResponder) ReplyFile(name string, r io.Reader) (astral.Messa
 	return nil, err
 }
 
-// Respond replies to a user by serializing Response
-func (m *InteractionResponder) Respond(r astral.Response) (astral.Message, error) {
+// Respond replies to a user by serializing MessageContent
+func (m *InteractionResponder) Respond(r astral.MessageContent) (astral.Message, error) {
 	var embeds *[]discord.Embed = nil
 
 	if r.Embeds != nil {
