@@ -56,7 +56,11 @@ type Channel interface {
 	// Send sends a MessageContent (a message, but with fields for content, embeds, files) to the channel
 	Send(r MessageContent) (Message, error)
 
+	// EditMessage edits a message with new content
 	EditMessage(id MessageID, msg MessageContent) (Message, error)
+
+	// DeleteMessage removes a message
+	DeleteMessage(id MessageID) error
 }
 
 type User interface {
