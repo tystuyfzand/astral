@@ -2,10 +2,17 @@ package arikawa
 
 import (
 	"github.com/auroradevllc/astral/v3"
+	"github.com/auroradevllc/astral/v3/embed"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/gateway"
 	"github.com/diamondburned/arikawa/v3/state"
 )
+
+const Discord astral.ClientType = "discord"
+
+func init() {
+	embed.RegisterDecoder(Discord, embed.NewComplexDecoder[Embed, discord.Embed]())
+}
 
 func NewClient(state *state.State) *Client {
 	return &Client{
@@ -57,8 +64,8 @@ func (c *Client) Interface() any {
 	return c.state
 }
 
-func New(state *state.State) astral.Client {
-	return &Client{state: state}
+func (c *Client) Type() astral.ClientType {
+	return Discord
 }
 
 // ContextFrom creates a new MessageContext from the session and event
@@ -83,7 +90,7 @@ func ContextFrom(state *state.State, event *gateway.MessageCreateEvent, r *astra
 
 	ctx := astral.NewContext(astral.ContextOptions{
 		Route:   r,
-		Client:  &Client{state: state},
+		Client:  NewClient(state),
 		Server:  NewServer(state, g),
 		Channel: NewChannel(state, c),
 		User:    NewUser(&event.Author),

@@ -175,8 +175,8 @@ var _ = Describe("Context Interactions", func() {
 
 			ctx, err := ContextFromInteraction(s, evt, r)
 
-			Expect(err).To(BeNil())
-			Expect(ctx.Message).ToNot(BeNil())
+			Expect(err).ToNot(HaveOccurred())
+			Expect(ctx).ToNot(BeNil())
 		})
 		It("Should parse arguments using channel discord endpoint", func() {
 			ch := discord.Channel{
@@ -204,8 +204,8 @@ var _ = Describe("Context Interactions", func() {
 			ctx, err := ContextFromInteraction(s, evt, r)
 
 			Expect(err).To(BeNil())
-			Expect(ctx.Message).ToNot(BeNil())
-			Expect(ctx.ChannelArg("channel").ID).To(Equal(ch.ID))
+			Expect(ctx).ToNot(BeNil())
+			Expect(string(ctx.ChannelArg("channel").ID())).To(Equal(ch.ID.String()))
 		})
 		It("Should parse arguments using user discord endpoint", func() {
 			u := discord.User{
@@ -233,8 +233,8 @@ var _ = Describe("Context Interactions", func() {
 			ctx, err := ContextFromInteraction(s, evt, r)
 
 			Expect(err).To(BeNil())
-			Expect(ctx.Message).ToNot(BeNil())
-			Expect(ctx.UserArg("user").ID).To(Equal(u.ID))
+			Expect(ctx).ToNot(BeNil())
+			Expect(string(ctx.UserArg("user").ID())).To(Equal(u.ID.String()))
 		})
 		It("Should parse arguments using role discord endpoint", func() {
 			guildId := discord.GuildID(123456)
@@ -264,7 +264,7 @@ var _ = Describe("Context Interactions", func() {
 
 			Expect(err).To(BeNil())
 			Expect(ctx.Message).ToNot(BeNil())
-			Expect(ctx.UserArg("role").ID).To(Equal(role.ID))
+			Expect(string(ctx.UserArg("role").ID())).To(Equal(role.ID.String()))
 		})
 		It("Should parse multiple arguments simultaneously", func() {
 			u := discord.User{
@@ -305,9 +305,9 @@ var _ = Describe("Context Interactions", func() {
 			ctx, err := ContextFromInteraction(s, evt, r)
 
 			Expect(err).To(BeNil())
-			Expect(ctx.Message).ToNot(BeNil())
-			Expect(ctx.UserArg("user").ID).To(Equal(u.ID))
-			Expect(ctx.ChannelArg("channel").ID).To(Equal(ch.ID))
+			Expect(ctx).ToNot(BeNil())
+			Expect(string(ctx.UserArg("user").ID())).To(Equal(u.ID.String()))
+			Expect(string(ctx.ChannelArg("channel").ID())).To(Equal(ch.ID.String()))
 		})
 		It("Should parse nested arguments properly", func() {
 

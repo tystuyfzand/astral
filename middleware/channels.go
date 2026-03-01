@@ -2,8 +2,8 @@ package middleware
 
 import (
 	"errors"
+
 	"github.com/auroradevllc/astral/v3"
-	"github.com/diamondburned/arikawa/v3/discord"
 )
 
 // Errors
@@ -16,7 +16,7 @@ var (
 func RequireNSFW(catch CatchFunc) astral.MiddlewareFunc {
 	return func(fn astral.Handler) astral.Handler {
 		return func(ctx *astral.Context) {
-			if !ctx.Channel.NSFW {
+			if !ctx.Channel.IsNSFW() {
 				callCatch(ctx, catch, ErrChannelNotNSFW)
 				return
 			}
@@ -26,10 +26,10 @@ func RequireNSFW(catch CatchFunc) astral.MiddlewareFunc {
 }
 
 // ChannelType requires the specific channel type from the message
-func ChannelType(t discord.ChannelType, catch CatchFunc) astral.MiddlewareFunc {
+func ChannelType(t astral.ChannelType, catch CatchFunc) astral.MiddlewareFunc {
 	return func(fn astral.Handler) astral.Handler {
 		return func(ctx *astral.Context) {
-			if ctx.Channel.Type != t {
+			if ctx.Channel.Type() != t {
 				callCatch(ctx, catch, ErrChannelType)
 				return
 			}

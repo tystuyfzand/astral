@@ -2,6 +2,7 @@ package astral
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 )
 
@@ -32,7 +33,7 @@ func (c *Context) ConvertArg(arg *Argument, val any) (any, error) {
 			return v, nil
 		}
 
-		v, err := strconv.ParseInt(val.(string), 10, 64)
+		v, err := strconv.ParseInt(valToString(val), 10, 64)
 
 		if err != nil {
 			return nil, err
@@ -47,16 +48,16 @@ func (c *Context) ConvertArg(arg *Argument, val any) (any, error) {
 			return v, nil
 		}
 
-		return strconv.ParseFloat(val.(string), 64)
+		return strconv.ParseFloat(valToString(val), 64)
 	case ArgumentTypeBool:
 		if v, ok := val.(bool); ok {
 			return v, nil
 		}
 
-		return strconv.ParseBool(val.(string))
+		return strconv.ParseBool(valToString(val))
 	case ArgumentTypeUserMention:
 		// Match Discord style <@ID> mentions
-		m := userMentionRegexp.FindStringSubmatch(val.(string))
+		m := userMentionRegexp.FindStringSubmatch(valToString(val))
 
 		if m != nil {
 			val = m[1]
@@ -64,9 +65,9 @@ func (c *Context) ConvertArg(arg *Argument, val any) (any, error) {
 
 		// TODO: Values can be int64s/etc
 
-		return c.Client.User(ID(val.(string)))
+		return c.Client.User(UserID(valToString(val)))
 	case ArgumentTypeChannelMention:
-		m := channelMentionRegexp.FindStringSubmatch(val.(string))
+		m := channelMentionRegexp.FindStringSubmatch(valToString(val))
 
 		if m != nil {
 			val = m[1]
@@ -74,14 +75,30 @@ func (c *Context) ConvertArg(arg *Argument, val any) (any, error) {
 
 		// TODO: Values can be int64s/etc
 
-		return c.Server.Channel(ID(val.(string)))
+		return c.Server.Channel(ChannelID(valToString(val)))
 	case ArgumentTypeEmoji:
-		return c.Server.Emoji(ID(val.(string)))
+		return c.Server.Emoji(EmojiID(valToString(val)))
 	case ArgumentTypeRole:
-		return c.Server.Role(ID(val.(string)))
+		return c.Server.Role(RoleID(valToString(val)))
 	}
 
 	return val, nil
+}
+
+type Stringable interface {
+	String() string
+}
+
+func valToString(v any) string {
+	if s, ok := v.(string); ok {
+		return s
+	}
+
+	if s, ok := v.(Stringable); ok {
+		return s.String()
+	}
+
+	return fmt.Sprintf("%v", v)
 }
 
 // Arg finds and returns a named argument as a string

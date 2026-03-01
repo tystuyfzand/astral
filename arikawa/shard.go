@@ -15,6 +15,11 @@ type ShardedClient struct {
 	*ShardManager
 }
 
+func (c *ShardedClient) Type() astral.ClientType {
+	return Discord
+}
+
+// User returns a user from the main shard
 func (c *ShardedClient) User(id astral.UserID) (astral.User, error) {
 	user, err := c.Shard(0).User(UserID(id))
 
@@ -25,6 +30,7 @@ func (c *ShardedClient) User(id astral.UserID) (astral.User, error) {
 	return NewUser(user), nil
 }
 
+// Server looks up a shard for a server id, then wraps it and returns it.
 func (c *ShardedClient) Server(id astral.ServerID) (astral.Server, error) {
 	guildId := GuildID(id)
 
@@ -39,6 +45,7 @@ func (c *ShardedClient) Server(id astral.ServerID) (astral.Server, error) {
 	return NewServer(currentShard, guild), nil
 }
 
+// Servers lists all servers on all shards
 func (c *ShardedClient) Servers() ([]astral.Server, error) {
 	var servers []astral.Server
 
@@ -61,6 +68,9 @@ func (c *ShardedClient) Interface() any {
 	return c.ShardManager
 }
 
+// NewShardManager wraps a NewShardFunc with a custom one that provides additional functionality, like hooks.
+// This allows things to be invoked on shard creation without having to define it in the shard func every time,
+// enabling dynamic declaration of things (such as events that sub-modules require)
 func NewShardManager(token string, fn shard.NewShardFunc) (*ShardManager, error) {
 	m := &ShardManager{
 		fn:    fn,

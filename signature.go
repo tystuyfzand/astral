@@ -2,31 +2,12 @@ package astral
 
 import (
 	"encoding/csv"
-	"github.com/diamondburned/arikawa/v3/discord"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
 type ArgumentType int
-
-// DiscordType returns the Discord CommandOptionType for an argument
-func (t ArgumentType) DiscordType() discord.CommandOptionType {
-	switch t {
-	case ArgumentTypeInt:
-		return discord.IntegerOptionType
-	case ArgumentTypeBool:
-		return discord.BooleanOptionType
-	case ArgumentTypeUserMention:
-		return discord.UserOptionType
-	case ArgumentTypeChannelMention:
-		return discord.ChannelOptionType
-	case ArgumentTypeRole:
-		return discord.RoleOptionType
-	default:
-		return discord.StringOptionType
-	}
-}
 
 const (
 	ArgumentTypeBasic ArgumentType = iota

@@ -2,6 +2,7 @@ package arikawa
 
 import (
 	"github.com/auroradevllc/astral/v3"
+	"github.com/auroradevllc/astral/v3/embed"
 	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/state"
@@ -39,6 +40,20 @@ func (c *Channel) Send(r astral.MessageContent) (astral.Message, error) {
 	}
 
 	var embeds []discord.Embed
+
+	if len(r.Embeds) > 0 {
+		embeds = make([]discord.Embed, len(r.Embeds))
+
+		for i, e := range r.Embeds {
+			rendered, err := embed.Render[discord.Embed](Discord, e)
+
+			if err != nil {
+				return nil, err
+			}
+
+			embeds[i] = *rendered
+		}
+	}
 
 	data := api.SendMessageData{
 		Content: r.Content,
@@ -83,6 +98,10 @@ func (c *Channel) Type() astral.ChannelType {
 	return astral.ChannelTypeUnknown
 }
 
+func (c *Channel) IsNSFW() bool {
+	return c.Channel.NSFW
+}
+
 func (c *Channel) EditMessage(id astral.MessageID, msg astral.MessageContent) (astral.Message, error) {
 	editData := api.EditMessageData{}
 
@@ -97,4 +116,8 @@ func (c *Channel) EditMessage(id astral.MessageID, msg astral.MessageContent) (a
 	}
 
 	return NewMessage(m), nil
+}
+
+func (c *Channel) DeleteMessage(id astral.MessageID) error {
+	return c.state.DeleteMessage(c.Channel.ID, MessageID(id), "")
 }

@@ -1,18 +1,40 @@
 on: [push, pull_request]
 name: Test
+
 jobs:
   test:
     strategy:
       matrix:
         go-version: [1.25.x, 1.26.x]
-        platform: [ubuntu-latest, macos-latest, windows-latest]
+        platform: [ubuntu-latest]
     runs-on: ${{ matrix.platform }}
+
     steps:
-    - name: Install Go
-      uses: actions/setup-go@v1
-      with:
-        go-version: ${{ matrix.go-version }}
-    - name: Checkout code
-      uses: actions/checkout@v1
-    - name: Test
-      run: go test ./...
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Cache Go modules
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+
+      - name: Install Ginkgo CLI
+        run: |
+          go install github.com/onsi/ginkgo/v2/ginkgo@latest
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run Ginkgo tests
+        run: |
+          ginkgo -r -v

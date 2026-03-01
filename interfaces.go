@@ -11,6 +11,8 @@ const (
 	ChannelTypeDirect
 )
 
+type ClientType string
+
 type Client interface {
 	// User looks up/retrieves a User interface wrapper
 	User(id UserID) (User, error)
@@ -23,6 +25,9 @@ type Client interface {
 
 	// Interface returns the underlying object backing this client
 	Interface() any
+
+	// Type returns the ClientType, used for embeds and identification
+	Type() ClientType
 }
 
 type Message interface {
@@ -49,6 +54,9 @@ type Channel interface {
 	ID() ChannelID
 	Name() string
 	Type() ChannelType
+
+	// IsNSFW checks if a channel is NSFW
+	IsNSFW() bool
 
 	// SendMessage sends a basic text message to the channel
 	SendMessage(msg string) (Message, error)
