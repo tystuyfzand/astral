@@ -3,6 +3,7 @@ package arikawa
 import (
 	"github.com/auroradevllc/astral/v3"
 	"github.com/diamondburned/arikawa/v3/discord"
+	"github.com/samber/lo"
 )
 
 func NewUser(u *discord.User) *User {
@@ -35,4 +36,30 @@ func (r *Role) ID() astral.RoleID {
 
 func (r *Role) Name() string {
 	return r.Role.Name
+}
+
+func NewMember(m *discord.Member) *Member {
+	return &Member{Member: m}
+}
+
+type Member struct {
+	*discord.Member
+}
+
+func (m *Member) ID() astral.MemberID {
+	return astral.MemberID(m.Member.User.ID.String())
+}
+
+func (m *Member) Name() string {
+	if m.Member.Nick != "" {
+		return m.Member.Nick
+	}
+
+	return m.Member.User.Username
+}
+
+func (m *Member) Roles() []astral.RoleID {
+	return lo.Map(m.Member.RoleIDs, func(id discord.RoleID, _ int) astral.RoleID {
+		return astral.RoleID(id.String())
+	})
 }

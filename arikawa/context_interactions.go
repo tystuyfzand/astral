@@ -31,7 +31,8 @@ func ContextFromInteraction(state *state.State, event *gateway.InteractionCreate
 		Client:  NewClient(state),
 		Server:  NewServer(state, g),
 		Channel: NewChannel(state, c),
-		User:    NewUser(event.User),
+		User:    NewUser(event.Sender()),
+		Member:  NewMember(event.Member),
 	})
 
 	// Need a ctx first

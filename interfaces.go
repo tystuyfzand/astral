@@ -104,3 +104,13 @@ type Role interface {
 	ID() RoleID
 	Name() string
 }
+
+type Member interface {
+	ID() MemberID
+
+	// Name represents a server member specific name override
+	Name() string
+
+	// Roles retrieves role ids from a member
+	Roles() []RoleID
+}

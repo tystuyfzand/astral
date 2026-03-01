@@ -17,6 +17,7 @@ type Context struct {
 	Channel        Channel
 	Message        Message
 	User           User
+	Member         Member
 	Prefix         string
 	Command        string
 	ArgumentString string
@@ -33,6 +34,7 @@ type ContextOptions struct {
 	Server    Server
 	Channel   Channel
 	User      User
+	Member    Member
 	Message   Message
 	Responder Responder
 }
@@ -47,6 +49,7 @@ func NewContext(opts ContextOptions, opt ...ContextOption) *Context {
 		Channel:     opts.Channel,
 		Message:     opts.Message,
 		User:        opts.User,
+		Member:      opts.Member,
 		responder:   opts.Responder,
 	}
 

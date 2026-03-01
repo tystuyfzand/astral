@@ -95,6 +95,7 @@ func ContextFrom(state *state.State, event *gateway.MessageCreateEvent, r *astra
 		Channel: NewChannel(state, c),
 		User:    NewUser(&event.Author),
 		Message: NewMessage(&event.Message),
+		Member:  NewMember(event.Member),
 		Responder: &MessageResponder{
 			event:   event,
 			state:   state,

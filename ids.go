@@ -46,6 +46,12 @@ func (id UserID) IsValid() bool {
 	return ID(id).IsValid()
 }
 
+type MemberID ID
+
+func (id MemberID) IsValid() bool {
+	return ID(id).IsValid()
+}
+
 type EmojiID ID
 
 func (id EmojiID) IsValid() bool {
