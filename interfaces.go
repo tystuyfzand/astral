@@ -37,17 +37,32 @@ type Message interface {
 
 type Server interface {
 	ID() ServerID
+
 	Name() string
+
+	// IconURL returns a URL to the server's icon, or empty if not set
+	IconURL() string
+
+	// OwnerID retrieves the owner's user id
 	OwnerID() UserID
 
 	// Channel looks up/retrieves a Channel interface wrapper
 	Channel(id ChannelID) (Channel, error)
 
-	// Emoji looks up/retrieves either an Emoji (built-in) or custom emoji
-	Emoji(id EmojiID) (Emoji, error)
+	// Channels retrieves all channels in the server
+	Channels() ([]Channel, error)
 
 	// Role looks up/retrieves a Role object
 	Role(id RoleID) (Role, error)
+
+	// Roles retrieves all roles in the server
+	Roles() ([]Role, error)
+
+	// Emoji looks up/retrieves either an Emoji (built-in) or custom emoji
+	Emoji(id EmojiID) (Emoji, error)
+
+	// Emojis lists all emojis in a server
+	Emojis() ([]Emoji, error)
 }
 
 type Channel interface {

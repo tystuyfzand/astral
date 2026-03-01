@@ -54,3 +54,13 @@ func MessageID(id astral.MessageID) discord.MessageID {
 
 	return discord.MessageID(sf)
 }
+
+func EmojiID(id astral.EmojiID) discord.EmojiID {
+	sf, err := discord.ParseSnowflake(string(id))
+
+	if err != nil {
+		return discord.NullEmojiID
+	}
+
+	return discord.EmojiID(sf)
+}

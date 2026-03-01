@@ -4,6 +4,7 @@ import (
 	"github.com/auroradevllc/astral/v3"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/state"
+	"github.com/samber/lo"
 )
 
 type Server struct {
@@ -17,6 +18,10 @@ func (s *Server) ID() astral.ServerID {
 
 func (s *Server) Name() string {
 	return s.Guild.Name
+}
+
+func (s *Server) IconURL() string {
+	return s.Guild.IconURL()
 }
 
 func (s *Server) OwnerID() astral.UserID {
@@ -33,9 +38,38 @@ func (s *Server) Channel(id astral.ChannelID) (astral.Channel, error) {
 	return NewChannel(s.state, channel), nil
 }
 
+func (s *Server) Channels() ([]astral.Channel, error) {
+	ch, err := s.state.Channels(s.Guild.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return lo.Map(ch, func(c discord.Channel, _ int) astral.Channel {
+		return NewChannel(s.state, &c)
+	}), nil
+}
+
 func (s *Server) Emoji(id astral.EmojiID) (astral.Emoji, error) {
-	//TODO implement me
-	panic("implement me")
+	emoji, err := s.state.Emoji(s.Guild.ID, EmojiID(id))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return NewEmoji(emoji), nil
+}
+
+func (s *Server) Emojis() ([]astral.Emoji, error) {
+	emoji, err := s.state.Emojis(s.Guild.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return lo.Map(emoji, func(e discord.Emoji, _ int) astral.Emoji {
+		return NewEmoji(&e)
+	}), nil
 }
 
 func (s *Server) Role(id astral.RoleID) (astral.Role, error) {
@@ -46,6 +80,18 @@ func (s *Server) Role(id astral.RoleID) (astral.Role, error) {
 	}
 
 	return NewRole(role), nil
+}
+
+func (s *Server) Roles() ([]astral.Role, error) {
+	roles, err := s.state.Roles(s.Guild.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return lo.Map(roles, func(r discord.Role, _ int) astral.Role {
+		return NewRole(&r)
+	}), nil
 }
 
 func NewServer(state *state.State, guild *discord.Guild) *Server {
