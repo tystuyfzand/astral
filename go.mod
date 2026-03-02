@@ -3,6 +3,7 @@ module github.com/auroradevllc/astral/v3
 go 1.25.0
 
 require (
+	github.com/auroradevllc/handler v0.0.0-20250713234138-4e9496c07a98
 	github.com/diamondburned/arikawa/v3 v3.6.0
 	github.com/diamondburned/timedmap v0.0.0-20200510234918-a50f7ffba1d8
 	github.com/go-viper/mapstructure/v2 v2.5.0

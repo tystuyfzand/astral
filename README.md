@@ -1,19 +1,20 @@
 Astral
 ======
 
-A command router for [discordgo](https://github.com/bwmarrin/discordgo) with a few twists.
+A command router for multiple platforms.
 
-Heavily inspired by [dgrouter](https://github.com/Necroforger/dgrouter), but based off the command system used in [Astra](https://astrabot.net).
+Out of the box support currently exists/is focused on [arikawa](https://github.com/diamondburned/arikawa) - a Discord 
+bot library.
 
 Importing/Installing
 -
 
 ```bash
-go get meow.tf/astral
+go get github.com/auroradevllc/astral/v3
 ```
 
 ```go
-import "meow.tf/astral/router"
+import "github.com/auroradevllc/astral/v3"
 ```
 
 Signatures
