@@ -50,6 +50,9 @@ func (m *Member) ID() astral.MemberID {
 	return astral.MemberID(m.Member.User.ID.String())
 }
 
+func (m *Member) UserID() astral.UserID {
+	return astral.UserID(m.Member.User.ID.String())
+}
 func (m *Member) Name() string {
 	if m.Member.Nick != "" {
 		return m.Member.Nick

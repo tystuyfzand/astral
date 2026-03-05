@@ -14,6 +14,7 @@ import (
 	"github.com/auroradevllc/astral/v3"
 	"github.com/auroradevllc/astral/v3/arguments"
 	"github.com/auroradevllc/astral/v3/arikawa"
+	"github.com/auroradevllc/astral/v3/event"
 	"github.com/auroradevllc/astral/v3/middleware"
 	"github.com/auroradevllc/astral/v3/middleware/cooldown"
 	"github.com/diamondburned/arikawa/v3/discord"
@@ -44,6 +45,20 @@ func main() {
 
 	i := arikawa.NewInteractionHandler(s, discord.AppID(*flagAppID), route)
 
+	// Create a new astral event handler
+	e := event.NewHandler(arikawa.NewEventMapper(s))
+
+	// Use the event mapped interfaces, like in your own code:
+	e.AddHandler(func(m *event.MessageCreateEvent) {
+		log.Println("Created message", m.Message.ID())
+	})
+
+	// Add a generic event handler to the arikawa state to handle all incoming events
+	s.AddHandler(func(a interface{}) {
+		e.Handle(a)
+	})
+
+	// Or use direct handlers (for non-default responders, unsupported events, etc)
 	s.AddHandler(messageCreateHandler(s))
 	s.AddHandler(interactionHandler(s, i))
 
