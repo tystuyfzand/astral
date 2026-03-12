@@ -18,6 +18,12 @@ type EditMessageContent struct {
 	Files   *[]File
 }
 
+type CreateRoleData struct {
+	Name        string
+	Color       Color
+	Mentionable bool
+}
+
 type File struct {
 	Name   string
 	Size   int64

@@ -85,6 +85,7 @@ func (s *Server) Role(id astral.RoleID) (astral.Role, error) {
 	return NewRole(role), nil
 }
 
+// Roles retrieves the roles from the state, then maps them to a compatible interface
 func (s *Server) Roles() ([]astral.Role, error) {
 	roles, err := s.state.Roles(s.Guild.ID)
 
@@ -95,6 +96,26 @@ func (s *Server) Roles() ([]astral.Role, error) {
 	return lo.Map(roles, func(r discord.Role, _ int) astral.Role {
 		return NewRole(&r)
 	}), nil
+}
+
+// CreateRole creates a role based on the incoming data
+func (s *Server) CreateRole(data astral.CreateRoleData) (astral.Role, error) {
+	role, err := s.state.CreateRole(s.Guild.ID, api.CreateRoleData{
+		Name:        data.Name,
+		Color:       discord.Color(data.Color),
+		Mentionable: data.Mentionable,
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return NewRole(role), nil
+}
+
+// DeleteRole deletes a role
+func (s *Server) DeleteRole(id astral.RoleID) error {
+	return s.state.DeleteRole(s.Guild.ID, RoleID(id), "")
 }
 
 // AddRole adds a role to a server member, which is just a UserID as Discord doesn't have unique MemberIDs

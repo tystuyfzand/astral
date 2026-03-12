@@ -46,6 +46,12 @@ type Server interface {
 	// Emojis lists all emojis in a server
 	Emojis() ([]Emoji, error)
 
+	// CreateRole creates a new server role
+	CreateRole(data CreateRoleData) (Role, error)
+
+	// DeleteRole removes a server role
+	DeleteRole(id RoleID) error
+
 	// AddRole adds a role to a member/user
 	AddRole(memberID MemberID, roleID RoleID) error
 
