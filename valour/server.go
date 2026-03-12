@@ -78,6 +78,16 @@ func (s *Server) Emojis() ([]astral.Emoji, error) {
 	panic("implement me")
 }
 
+func (s *Server) Member(id astral.UserID) (astral.Member, error) {
+	member, err := s.client.MemberByUser(s.Planet.ID, UserID(id))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return
+}
+
 func (s *Server) CreateRole(data astral.CreateRoleData) (astral.Role, error) {
 	//TODO implement me
 	panic("implement me")

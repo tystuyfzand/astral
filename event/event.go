@@ -28,6 +28,11 @@ type UserUpdateEvent struct {
 	astral.User
 }
 
+func (*UserUpdateEvent) Username() string {
+	//TODO implement me
+	panic("implement me")
+}
+
 type ChannelCreateEvent struct {
 	astral.Channel
 }
@@ -55,6 +60,7 @@ type MessageDeleteEvent struct {
 }
 
 type MessageReactionAddEvent struct {
+	ServerID  astral.ServerID
 	UserID    astral.UserID
 	ChannelID astral.ChannelID
 	MessageID astral.MessageID
@@ -62,6 +68,7 @@ type MessageReactionAddEvent struct {
 }
 
 type MessageReactionRemoveEvent struct {
+	ServerID  astral.ServerID
 	UserID    astral.UserID
 	ChannelID astral.ChannelID
 	MessageID astral.MessageID

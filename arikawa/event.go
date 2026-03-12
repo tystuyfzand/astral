@@ -86,6 +86,7 @@ func mapMessageDelete(e *gateway.MessageDeleteEvent) *event.MessageDeleteEvent {
 
 func mapMessageReactionAdd(e *gateway.MessageReactionAddEvent) *event.MessageReactionAddEvent {
 	return &event.MessageReactionAddEvent{
+		ServerID:  astral.ServerID(e.GuildID.String()),
 		UserID:    astral.UserID(e.UserID.String()),
 		ChannelID: astral.ChannelID(e.ChannelID.String()),
 		MessageID: astral.MessageID(e.MessageID.String()),
@@ -95,6 +96,7 @@ func mapMessageReactionAdd(e *gateway.MessageReactionAddEvent) *event.MessageRea
 
 func mapMessageReactionRemove(e *gateway.MessageReactionRemoveEvent) *event.MessageReactionRemoveEvent {
 	return &event.MessageReactionRemoveEvent{
+		ServerID:  astral.ServerID(e.GuildID.String()),
 		UserID:    astral.UserID(e.UserID.String()),
 		ChannelID: astral.ChannelID(e.ChannelID.String()),
 		MessageID: astral.MessageID(e.MessageID.String()),

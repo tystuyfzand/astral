@@ -23,8 +23,16 @@ func (u *User) ID() astral.UserID {
 	return astral.UserID(u.User.ID.String())
 }
 
-func (u *User) Name() string {
+func (u *User) Username() string {
 	return u.User.Username
+}
+
+func (u *User) Name() string {
+	return u.DisplayOrUsername()
+}
+
+func (u *User) IsBot() bool {
+	return u.User.Bot
 }
 
 type Role struct {

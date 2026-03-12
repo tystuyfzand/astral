@@ -34,3 +34,13 @@ func RoleID(id astral.RoleID) valour.RoleID {
 
 	return sf
 }
+
+func UserID(id astral.UserID) valour.UserID {
+	sf, err := valour.ParseSnowflake[valour.UserID](string(id))
+
+	if err != nil {
+		return valour.NullUserID
+	}
+
+	return sf
+}

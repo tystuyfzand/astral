@@ -46,6 +46,9 @@ type Server interface {
 	// Emojis lists all emojis in a server
 	Emojis() ([]Emoji, error)
 
+	// Member retrieves a member for a user id
+	Member(id UserID) (Member, error)
+
 	// CreateRole creates a new server role
 	CreateRole(data CreateRoleData) (Role, error)
 
@@ -81,11 +84,20 @@ type Channel interface {
 }
 
 type User interface {
+	// ID returns the user's UserID
 	ID() UserID
+
+	// Username returns the user's username
+	Username() string
+
+	// Name returns the user's display name
 	Name() string
 
 	// Mention returns a formatted message with a "tag" or mention to @user
 	Mention() string
+
+	// IsBot checks whether a user is a bot
+	IsBot() bool
 }
 
 type Emoji interface {

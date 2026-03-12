@@ -85,6 +85,16 @@ func (s *Server) Role(id astral.RoleID) (astral.Role, error) {
 	return NewRole(role), nil
 }
 
+func (s *Server) Member(userID astral.UserID) (astral.Member, error) {
+	member, err := s.state.Member(s.Guild.ID, UserID(userID))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return NewMember(member), nil
+}
+
 // Roles retrieves the roles from the state, then maps them to a compatible interface
 func (s *Server) Roles() ([]astral.Role, error) {
 	roles, err := s.state.Roles(s.Guild.ID)
