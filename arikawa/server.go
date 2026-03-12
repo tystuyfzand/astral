@@ -2,10 +2,13 @@ package arikawa
 
 import (
 	"github.com/auroradevllc/astral/v3"
+	"github.com/diamondburned/arikawa/v3/api"
 	"github.com/diamondburned/arikawa/v3/discord"
 	"github.com/diamondburned/arikawa/v3/state"
 	"github.com/samber/lo"
 )
+
+var _ astral.Server = (*Server)(nil)
 
 type Server struct {
 	*discord.Guild
@@ -92,6 +95,16 @@ func (s *Server) Roles() ([]astral.Role, error) {
 	return lo.Map(roles, func(r discord.Role, _ int) astral.Role {
 		return NewRole(&r)
 	}), nil
+}
+
+// AddRole adds a role to a server member, which is just a UserID as Discord doesn't have unique MemberIDs
+func (s *Server) AddRole(memberID astral.MemberID, roleID astral.RoleID) error {
+	return s.state.AddRole(s.Guild.ID, UserID(astral.UserID(memberID)), RoleID(roleID), api.AddRoleData{})
+}
+
+// RemoveRole removes a role from a server member, which is converted to a UserID as Discord doesn't use MemberIDs
+func (s *Server) RemoveRole(memberID astral.MemberID, roleID astral.RoleID) error {
+	return s.state.RemoveRole(s.Guild.ID, UserID(astral.UserID(memberID)), RoleID(roleID), "")
 }
 
 func NewServer(state *state.State, guild *discord.Guild) *Server {

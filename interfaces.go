@@ -9,6 +9,7 @@ const (
 	ChannelTypeVoice
 	ChannelTypeVideo
 	ChannelTypeDirect
+	ChannelTypeGroup
 )
 
 type Message interface {
@@ -44,6 +45,12 @@ type Server interface {
 
 	// Emojis lists all emojis in a server
 	Emojis() ([]Emoji, error)
+
+	// AddRole adds a role to a member/user
+	AddRole(memberID MemberID, roleID RoleID) error
+
+	// RemoveRole removes a role from a member/user
+	RemoveRole(memberID MemberID, roleID RoleID) error
 }
 
 type Channel interface {

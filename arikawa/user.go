@@ -6,6 +6,11 @@ import (
 	"github.com/samber/lo"
 )
 
+var (
+	_ astral.User   = (*User)(nil)
+	_ astral.Member = (*Member)(nil)
+)
+
 func NewUser(u *discord.User) *User {
 	return &User{User: u}
 }
@@ -53,6 +58,7 @@ func (m *Member) ID() astral.MemberID {
 func (m *Member) UserID() astral.UserID {
 	return astral.UserID(m.Member.User.ID.String())
 }
+
 func (m *Member) Name() string {
 	if m.Member.Nick != "" {
 		return m.Member.Nick
